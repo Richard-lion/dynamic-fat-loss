@@ -3,7 +3,21 @@ import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest, FOODS } fro
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(req);
+    // getUserIdFromRequest checks Authorization header (from apiFetch)
+    // but also needs to check cookie for browser requests
+    const authHeader = req.headers.get('Authorization') || '';
+    let userId = authHeader.startsWith('Bearer ')
+      ? req.headers.get('Authorization')!.slice(7).trim()
+      : null;
+    // Fallback: check fl_token cookie
+    if (!userId) {
+      const cookieToken = req.cookies.get('fl_token')?.value;
+      if (cookieToken) {
+        const { parseToken } = await import('@/lib/auth');
+        const parsed = parseToken(cookieToken);
+        userId = parsed?.userId ?? null;
+      }
+    }
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
     const state = await getUserStateAsync(userId);
