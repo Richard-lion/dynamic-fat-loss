@@ -38,18 +38,21 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // If already logged in and has data, redirect to app
+  // If not logged in, redirect to login
   useEffect(() => {
+    const token = localStorage.getItem('fl_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    // If logged in, check if onboarded
     const checkUser = async () => {
-      const token = localStorage.getItem('fl_token');
-      if (!token) return; // Not logged in — show onboarding
-
       try {
         const res = await apiFetch('/api/dashboard');
         if (res.ok) {
-          router.push('/app'); // Already onboarded
+          router.push('/app'); // Already onboarded → go to dashboard
         }
-        // Otherwise (401/err) — stay on onboarding to set up data
+        // Otherwise (401) → stay on onboarding to set up data
       } catch {
         // Stay on onboarding
       }
