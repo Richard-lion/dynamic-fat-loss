@@ -3,8 +3,7 @@
  * Uses Upstash Redis (production) or local filesystem (local dev).
  */
 import * as fs from 'fs';
-import path from 'path';
-import redis from '@/lib/kv';
+import { kvGetAccounts, kvSetAccounts } from '@/lib/kv';
 
 export interface Account {
   passwordHash: string;
@@ -40,30 +39,22 @@ function isRedisConfigured(): boolean {
   return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }
 
-// ── Public API ──────────────────────────────────────────────────
+// ── Public API (sync — for local dev fallback) ─────────────────────
 
 export function getAllAccounts(): Record<string, Account> {
-  if (isRedisConfigured()) return {} as Record<string, Account>; // won't be called
+  if (isRedisConfigured()) return {} as Record<string, Account>;
   return readLocalAccounts();
 }
 
 export function getAccountByUsername(username: string): Account | null {
-  if (isRedisConfigured()) {
-    // Synchronous fallback for TypeScript — actual call is async below
-    return null;
-  }
+  if (isRedisConfigured()) return null; // async version used in routes
   const accounts = readLocalAccounts();
   return accounts[username] || null;
 }
 
 export function createAccount(username: string, passwordHash: string, userId: string): Account {
   const account: Account = { passwordHash, userId, createdAt: new Date().toISOString() };
-
-  if (isRedisConfigured()) {
-    // Handled async in route — this is a no-op for TypeScript
-    return account;
-  }
-
+  if (isRedisConfigured()) return account; // async version used in routes
   const accounts = readLocalAccounts();
   accounts[username] = account;
   writeLocalAccounts(accounts);
@@ -71,38 +62,27 @@ export function createAccount(username: string, passwordHash: string, userId: st
 }
 
 export function usernameExists(username: string): boolean {
-  if (isRedisConfigured()) return false; // async check in route
+  if (isRedisConfigured()) return false; // async version used in routes
   const accounts = readLocalAccounts();
   return username in accounts;
 }
 
-// ── Async versions (for routes) ──────────────────────────────────
+// ── Async versions (for routes) ─────────────────────────────────────
 
 export async function kvGetAccountByUsername(username: string): Promise<Account | null> {
-  const accounts = await redisGetAllAccounts();
+  const accounts = await kvGetAccounts();
   return accounts[username] || null;
 }
 
 export async function kvCreateAccount(username: string, passwordHash: string, userId: string): Promise<Account> {
   const account: Account = { passwordHash, userId, createdAt: new Date().toISOString() };
-  const accounts = await redisGetAllAccounts();
+  const accounts = await kvGetAccounts();
   accounts[username] = account;
-  await redis.set('accounts', JSON.stringify(accounts));
+  await kvSetAccounts(accounts);
   return account;
 }
 
 export async function kvUsernameExists(username: string): Promise<boolean> {
-  const accounts = await redisGetAllAccounts();
+  const accounts = await kvGetAccounts();
   return username in accounts;
-}
-
-async function redisGetAllAccounts(): Promise<Record<string, Account>> {
-  try {
-    const raw = await redis.get<string>('accounts');
-    if (!raw) return {};
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('[accounts] Redis read error, falling back to local:', e);
-    return readLocalAccounts();
-  }
 }

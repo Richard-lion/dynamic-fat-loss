@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kvUsernameExists, kvCreateAccount } from '@/lib/accounts';
 import { hashPassword, makeToken } from '@/lib/auth';
-import { getUserState } from '@/lib/store';
-import redis from '@/lib/kv';
+import { setUserStateAsync } from '@/lib/store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,23 +31,24 @@ export async function POST(req: NextRequest) {
     // Create account in Redis
     await kvCreateAccount(trimmed, passwordHash, userId);
 
-    // Initialize user state in Redis
-    const state = getUserState(userId);
-    state.user = {
-      id: userId,
-      gender: 'male',
-      workoutLevel: '4-5',
-      totalDurationDays: 60,
-      startDate: new Date().toISOString().split('T')[0],
-      createdAt: new Date().toISOString(),
+    // Initialize user state
+    const state = {
+      user: {
+        id: userId,
+        gender: 'male' as const,
+        workoutLevel: '4-5',
+        totalDurationDays: 60,
+        startDate: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+      },
+      currentWeight: 0,
+      dailyLogs: {},
+      cycleState: null,
+      targets: null,
     };
-    state.currentWeight = 0;
-    state.dailyLogs = {};
-    state.cycleState = null;
-    state.targets = null;
 
     // Persist user state to Redis
-    await redis.set(`user:${userId}`, JSON.stringify(state));
+    await setUserStateAsync(userId, state);
 
     const token = makeToken(userId);
     const response = NextResponse.json({ success: true, token, userId });

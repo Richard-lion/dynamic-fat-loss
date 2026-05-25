@@ -4,7 +4,7 @@
  */
 import * as fs from 'fs';
 import { parseToken } from './auth';
-import redis from './kv';
+import { kvGetUser, kvSetUser } from './kv';
 
 export interface User {
   id: string;
@@ -108,8 +108,6 @@ const memoryCache: Record<string, UserState> = {};
 export function getUserState(userId: string): UserState {
   if (isRedisConfigured()) {
     if (!(userId in memoryCache)) {
-      // Sync read from Redis not possible here — caller must use getUserStateAsync
-      // Return empty state as placeholder; actual data loaded async
       memoryCache[userId] = { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
     }
     return memoryCache[userId];
@@ -129,15 +127,10 @@ export function setUserState(userId: string, state: UserState): void {
 
 export async function getUserStateAsync(userId: string): Promise<UserState> {
   if (isRedisConfigured()) {
-    try {
-      const raw = await redis.get<string>(`user:${userId}`);
-      if (raw) {
-        const state = JSON.parse(raw) as UserState;
-        memoryCache[userId] = state;
-        return state;
-      }
-    } catch (e) {
-      console.error('[store] Redis read error:', e);
+    const state = await kvGetUser(userId);
+    if (state) {
+      memoryCache[userId] = state;
+      return state;
     }
     return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
   }
@@ -147,11 +140,7 @@ export async function getUserStateAsync(userId: string): Promise<UserState> {
 export async function setUserStateAsync(userId: string, state: UserState): Promise<void> {
   memoryCache[userId] = state;
   if (isRedisConfigured()) {
-    try {
-      await redis.set(`user:${userId}`, JSON.stringify(state));
-    } catch (e) {
-      console.error('[store] Redis write error:', e);
-    }
+    await kvSetUser(userId, state);
   } else {
     writeLocalUserState(userId, state);
   }
