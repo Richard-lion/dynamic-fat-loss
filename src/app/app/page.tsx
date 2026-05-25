@@ -17,21 +17,56 @@ function apiFetch(path: string, opts?: RequestInit) {
 
 function ProgressRing({ value, max, label, unit, color, size = 80 }: any) {
   const pct = Math.min((value / max) * 100, 100);
-  const r = (size / 2) - 7;
+  const strokeWidth = 7;
+  const r = (size / 2) - strokeWidth;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
 
   return (
     <div className="ring-card">
-      <div style={{ width: size, height: size, margin: '0 auto 8px', position: 'relative' }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle className="bg" cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={7} />
-          <circle className="fg" cx={size/2} cy={size/2} r={r}
-            fill="none" stroke={color} strokeWidth={7} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
+      {/* SVG is rotated -90deg so we draw from top (12 o'clock) */}
+      <div style={{ width: size, height: size, position: 'relative', margin: '0 auto 8px' }}>
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          style={{ transform: 'rotate(-90deg)', display: 'block' }}
+        >
+          {/* Background ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth={strokeWidth}
+          />
+          {/* Foreground ring (progress) */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circ}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+          />
         </svg>
-        <div className="ring-chart center-text">
-          <span className="num" style={{ fontSize: 14 }}>{value}</span>
-          <span className="unit">{unit}</span>
+        {/* Text overlay — absolutely positioned over the SVG */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{value}</span>
+          <span style={{ fontSize: 9, color: 'var(--text2)' }}>{unit}</span>
         </div>
       </div>
       <div className="ring-label">{label}</div>
