@@ -38,50 +38,23 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // If not logged in, redirect to login
   useEffect(() => {
     const token = localStorage.getItem('fl_token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    // If logged in, check if onboarded
+    if (!token) { router.push('/login'); return; }
     const checkUser = async () => {
       try {
         const res = await apiFetch('/api/dashboard');
-        if (res.ok) {
-          router.push('/app'); // Already onboarded → go to dashboard
-        }
-        // Otherwise (401) → stay on onboarding to set up data
+        if (res.ok) { router.push('/app'); return; }
         setLoading(false);
-      } catch {
-        setLoading(false);
-      }
+      } catch { setLoading(false); }
     };
     checkUser();
   }, [router]);
 
   if (loading) return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      background: 'var(--bg)',
-    }}>
-      <div style={{
-        width: 40,
-        height: 40,
-        border: '3px solid var(--bg3)',
-        borderTop: '3px solid var(--accent)',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-      }} />
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+    <div className="loading-screen">
+      <div className="spinner" />
+      <div style={{ fontSize: 13, color: 'var(--text2)' }}>加载中...</div>
     </div>
   );
 
@@ -105,16 +78,12 @@ export default function OnboardingPage() {
       const res = await apiFetch('/api/onboarding', {
         method: 'POST',
         body: JSON.stringify({
-          gender,
-          weight: parseFloat(weight),
-          workoutLevel,
-          totalDurationDays: duration,
+          gender, weight: parseFloat(weight),
+          workoutLevel, totalDurationDays: duration,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '初始化失败');
-
-      // Token already stored by login/register — just navigate
       router.push('/app');
     } catch (e: any) {
       setError(e.message);
@@ -124,26 +93,26 @@ export default function OnboardingPage() {
 
   return (
     <div className="container">
+      {/* Hero */}
       <div className="onboarding-hero">
-        <div className="icon">⚖️</div>
+        <div style={{ fontSize: 52, marginBottom: 10 }}>⚖️</div>
         <h1>动态减脂拉锯战</h1>
         <p>告别固定热量的瓶颈<br />用 10 天周期科学调整营养目标</p>
       </div>
 
-      {error && (
-        <div className="error-box">{error}</div>
-      )}
+      {error && <div className="error-box">{error}</div>}
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
+      {/* Step Progress */}
+      <div className="step-dots">
         {[1, 2, 3].map(s => (
-          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? 'var(--accent)' : 'var(--bg3)' }} />
+          <div key={s} className={`step-dot ${s < step ? 'done' : s === step ? 'active' : ''}`} />
         ))}
       </div>
 
       {step === 1 && (
-        <div className="onboarding-card">
-          <div className="step-num">STEP 1 / 3</div>
-          <h3>你的性别是？</h3>
+        <div className="card">
+          <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em' }}>STEP 1 / 3</div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>你的性别是？</h3>
           <div className="gender-toggle">
             <div className={`gender-btn ${gender === 'male' ? 'active' : ''}`} onClick={() => setGender('male')}>
               <span className="g-icon">♂</span>
@@ -158,22 +127,20 @@ export default function OnboardingPage() {
       )}
 
       {step === 2 && (
-        <div className="onboarding-card">
-          <div className="step-num">STEP 2 / 3</div>
-          <h3>目前体重（kg）</h3>
-          <div className="form-group">
+        <div className="card">
+          <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em' }}>STEP 2 / 3</div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>目前体重（kg）</h3>
+          <div className="form-group" style={{ marginBottom: 0 }}>
             <input
               type="number"
-              min="30"
-              max="300"
-              step="0.1"
+              min="30" max="300" step="0.1"
               placeholder="例如：68.5"
               value={weight}
               onChange={e => setWeight(e.target.value)}
-              style={{ fontSize: 28, textAlign: 'center', fontWeight: 700, width: '100%' }}
+              style={{ fontSize: 30, textAlign: 'center', fontWeight: 700, padding: '16px' }}
             />
           </div>
-          <p style={{ fontSize: 12, color: 'var(--text2)', textAlign: 'center', marginTop: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--text2)', textAlign: 'center', marginTop: 10 }}>
             营养目标会以这个体重为基础计算
           </p>
         </div>
@@ -181,9 +148,9 @@ export default function OnboardingPage() {
 
       {step === 3 && (
         <>
-          <div className="onboarding-card">
-            <div className="step-num">STEP 3 / 3</div>
-            <h3>每周运动多久？</h3>
+          <div className="card">
+            <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em' }}>STEP 3 / 3</div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>每周运动多久？</h3>
             <div className="workout-options">
               {WORKOUT_LEVELS.map(w => (
                 <div
@@ -191,15 +158,15 @@ export default function OnboardingPage() {
                   className={`workout-btn ${workoutLevel === w.value ? 'active' : ''}`}
                   onClick={() => setWorkoutLevel(w.value)}
                 >
-                  <div style={{ fontWeight: 600 }}>{w.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>{w.sub}</div>
+                  <span className="w-main">{w.label}</span>
+                  <span className="w-sub">{w.sub}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="onboarding-card">
-            <h3>计划时长</h3>
+          <div className="card">
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>计划时长</h3>
             <div className="duration-options">
               {DURATIONS.map(d => (
                 <div
@@ -222,8 +189,9 @@ export default function OnboardingPage() {
 
       {step > 1 && (
         <button
+          className="btn-ghost"
           onClick={() => setStep(step - 1)}
-          style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 13, marginTop: 12, cursor: 'pointer', display: 'block', width: '100%' }}
+          style={{ display: 'block', width: '100%', marginTop: 8, textAlign: 'center' }}
         >
           ← 上一步
         </button>

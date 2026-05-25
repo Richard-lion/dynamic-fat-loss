@@ -5,18 +5,6 @@ import { useRouter } from 'next/navigation';
 
 const API = '/api/auth';
 
-function apiFetch(path: string, opts?: RequestInit) {
-  const token = localStorage.getItem('fl_token');
-  return fetch(path, {
-    ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...opts?.headers,
-    },
-  });
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const [tab, setTab] = useState<'login' | 'register'>('login');
@@ -26,7 +14,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // If already logged in (cookie or localStorage), redirect to home
   useEffect(() => {
     const token = localStorage.getItem('fl_token');
     if (token) router.replace('/');
@@ -74,10 +61,10 @@ export default function LoginPage() {
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
 
-      // Check if user has completed onboarding
-      const stateRes = await apiFetch('/api/dashboard');
+      const stateRes = await fetch('/api/dashboard', {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
       if (stateRes.status === 401) {
-        // Onboarding not done — go to onboarding
         router.push('/');
       } else {
         router.push('/app');
@@ -96,16 +83,17 @@ export default function LoginPage() {
 
   return (
     <div className="container" style={{ maxWidth: 420, margin: '0 auto', paddingTop: 60 }}>
-      <div className="onboarding-hero" style={{ marginBottom: 28 }}>
-        <div className="icon">⚖️</div>
-        <h1>动态减脂拉锯战</h1>
+      {/* Hero */}
+      <div className="onboarding-hero">
+        <div style={{ fontSize: 52, marginBottom: 10 }}>⚖️</div>
+        <h1 style={{ fontSize: 26 }}>动态减脂拉锯战</h1>
         <p>登录你的账户<br />开始科学减脂之旅</p>
       </div>
 
-      {error && <div className="error-box" style={{ marginBottom: 16 }}>{error}</div>}
+      {error && <div className="error-box">{error}</div>}
 
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 24, background: 'var(--bg2)', borderRadius: 10, padding: 4, border: '1px solid var(--border)' }}>
+      {/* Tab Switcher */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 20, background: 'var(--bg3)', borderRadius: 'var(--radius)', padding: 4, border: '1px solid var(--border)' }}>
         {(['login', 'register'] as const).map(t => (
           <button
             key={t}
@@ -118,9 +106,10 @@ export default function LoginPage() {
               fontSize: 14,
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              background: tab === t ? 'var(--accent)' : 'transparent',
-              color: tab === t ? '#fff' : 'var(--text2)',
+              transition: 'all 0.18s',
+              background: tab === t ? 'var(--bg2)' : 'transparent',
+              color: tab === t ? 'var(--accent)' : 'var(--text2)',
+              boxShadow: tab === t ? 'var(--shadow-card)' : 'none',
             }}
           >
             {t === 'login' ? '登录' : '注册'}
@@ -129,89 +118,54 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="onboarding-card">
+        <div className="card">
           <div className="form-group" style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'block' }}>用户名</label>
+            <label>用户名</label>
             <input
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
               placeholder="输入用户名"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                fontSize: 15,
-                background: 'var(--bg3)',
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                color: 'var(--text)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
               autoComplete={tab === 'register' ? 'username' : 'username'}
             />
           </div>
 
           <div className="form-group" style={{ marginBottom: tab === 'register' ? 14 : 0 }}>
-            <label style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'block' }}>密码</label>
+            <label>密码</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="输入密码"
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                fontSize: 15,
-                background: 'var(--bg3)',
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                color: 'var(--text)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
               autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
             />
           </div>
 
           {tab === 'register' && (
-            <div className="form-group" style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'block' }}>确认密码</label>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>确认密码</label>
               <input
                 type="password"
                 value={confirmPwd}
                 onChange={e => setConfirmPwd(e.target.value)}
                 placeholder="再次输入密码"
-                style={{
-                  width: '100%',
-                  padding: '12px 14px',
-                  fontSize: 15,
-                  background: 'var(--bg3)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 10,
-                  color: 'var(--text)',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
                 autoComplete="new-password"
               />
             </div>
           )}
         </div>
 
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={loading}
-          style={{ width: '100%', marginTop: 8 }}
-        >
+        <button type="submit" className="btn-primary" disabled={loading}>
           {loading ? '处理中...' : tab === 'login' ? '登录' : '创建账户'}
         </button>
       </form>
 
       {tab === 'login' && (
-        <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text2)', marginTop: 20 }}>
-          还没有账户？<button onClick={() => setTab('register')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 12, padding: 0 }}>立即注册</button>
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text2)', marginTop: 20 }}>
+          还没有账户？{' '}
+          <button onClick={() => setTab('register')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0 }}>
+            立即注册
+          </button>
         </p>
       )}
     </div>
