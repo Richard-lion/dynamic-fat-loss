@@ -233,6 +233,14 @@ export default function AppPage() {
   const fatPct      = Math.round((todayLog.totalFat     / (targets.fat     || 1)) * 100);
   const kcalPct     = Math.round((todayLog.calories     / (targets.calories|| 1)) * 100);
 
+  const logout = () => {
+    localStorage.removeItem('fl_token');
+    localStorage.removeItem('fl_userId');
+    localStorage.removeItem('fl_username');
+    document.cookie = 'fl_token=; Max-Age=0; path=/';
+    router.push('/login');
+  };
+
   return (
     <>
       <div className="container">
@@ -242,6 +250,20 @@ export default function AppPage() {
             <h1>⚖️ 动态减脂</h1>
             <div className="subtitle">第 {cycleNumber} 个 10 天周期</div>
           </div>
+          <button
+            onClick={logout}
+            style={{
+              background: 'var(--bg3)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              color: 'var(--text2)',
+              fontSize: 12,
+              padding: '6px 12px',
+              cursor: 'pointer',
+            }}
+          >
+            登出
+          </button>
         </div>
 
         {/* Cycle Banner */}
