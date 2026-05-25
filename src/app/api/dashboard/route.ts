@@ -3,21 +3,35 @@ import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest, FOODS } fro
 
 export async function GET(req: NextRequest) {
   try {
-    // getUserIdFromRequest checks Authorization header (from apiFetch)
-    // but also needs to check cookie for browser requests
+    // Check Authorization header first
     const authHeader = req.headers.get('Authorization') || '';
-    let userId = authHeader.startsWith('Bearer ')
-      ? req.headers.get('Authorization')!.slice(7).trim()
-      : null;
+    let userId: string | null = null;
+    let tokenSource = '';
+
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      const { parseToken } = await import('@/lib/auth');
+      const parsed = parseToken(token);
+      if (parsed) {
+        userId = parsed.userId;
+        tokenSource = 'header';
+      }
+    }
+
     // Fallback: check fl_token cookie
     if (!userId) {
       const cookieToken = req.cookies.get('fl_token')?.value;
       if (cookieToken) {
         const { parseToken } = await import('@/lib/auth');
         const parsed = parseToken(cookieToken);
-        userId = parsed?.userId ?? null;
+        if (parsed) {
+          userId = parsed.userId;
+          tokenSource = 'cookie';
+        }
       }
     }
+
+    console.error('[dashboard] tokenSource:', tokenSource, 'userId:', userId);
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
     const state = await getUserStateAsync(userId);
