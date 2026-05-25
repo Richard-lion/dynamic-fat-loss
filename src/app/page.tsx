@@ -40,16 +40,42 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('fl_token');
-    if (!token) { router.push('/login'); return; }
-    const checkUser = async () => {
-      try {
-        const res = await apiFetch('/api/dashboard');
-        if (res.ok) { router.push('/app'); return; }
-        setLoading(false);
-      } catch { setLoading(false); }
-    };
-    checkUser();
+    if (token) {
+      // Has localStorage token — validate it
+      const checkUser = async () => {
+        try {
+          const res = await apiFetch('/api/dashboard');
+          if (res.ok) { router.push('/app'); return; }
+          // Token invalid — fall through to cookie check
+        } catch {}
+        tryLocalStorageFallback();
+      };
+      checkUser();
+    } else {
+      // No localStorage (private window) — try cookie session
+      tryCookieSession();
+    }
   }, [router]);
+
+  const tryCookieSession = async () => {
+    try {
+      const res = await fetch('/api/auth/session');
+      if (res.ok) {
+        // Cookie session valid — restore to localStorage and go to app
+        const data = await res.json();
+        localStorage.setItem('fl_token', data.token || '');
+        router.push('/app');
+        return;
+      }
+    } catch {}
+    // No valid session — go to login
+    router.push('/login');
+  };
+
+  const tryLocalStorageFallback = async () => {
+    // Token was invalid — try cookie as fallback
+    tryCookieSession();
+  };
 
   if (loading) return (
     <div className="loading-screen">
