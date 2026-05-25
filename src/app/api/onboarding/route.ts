@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserState, setUserState, getUserIdFromRequest } from '@/lib/store';
+import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest } from '@/lib/store';
 import { calcDailyTargets } from '@/lib/algorithm';
 
 export async function POST(req: NextRequest) {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
 
     state.user = {
       id: userId,
@@ -47,26 +47,15 @@ export async function POST(req: NextRequest) {
       settled: false,
     };
 
-    const todayLog = {
-      date: today,
-      weight: null as number | null,
-      foods: [],
-      totalCarbs: 0,
-      totalProtein: 0,
-      totalFat: 0,
-      totalSodium: 0,
-      calories: 0,
+    state.dailyLogs[today] = {
+      date: today, weight: null, foods: [],
+      totalCarbs: 0, totalProtein: 0, totalFat: 0, totalSodium: 0, calories: 0,
     };
-    state.dailyLogs[today] = todayLog;
 
-    setUserState(userId, state);
+    await setUserStateAsync(userId, state);
 
     return NextResponse.json({
-      success: true,
-      userId,
-      token: userId,
-      targets,
-      cycleState: state.cycleState,
+      success: true, userId, token: userId, targets, cycleState: state.cycleState,
     });
   } catch (e: any) {
     console.error('onboarding error:', e);

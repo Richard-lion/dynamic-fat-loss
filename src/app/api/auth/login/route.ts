@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccountByUsername } from '@/lib/accounts';
+import { kvGetAccountByUsername } from '@/lib/accounts';
 import { verifyPassword, makeToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
     }
 
-    const account = getAccountByUsername(trimmed);
+    const account = await kvGetAccountByUsername(trimmed);
     if (!account) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
       path: '/',
     });
     return response;

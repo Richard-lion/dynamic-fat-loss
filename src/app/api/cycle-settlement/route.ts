@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserState, setUserState, getUserIdFromRequest } from '@/lib/store';
+import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest } from '@/lib/store';
 import { calcDailyTargets } from '@/lib/algorithm';
 
 export async function GET(req: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const userId = getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     return NextResponse.json({ cycleState: state.cycleState, canSettle: false });
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
     const { weightChange, userFeeling } = await req.json();
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
     if (!state.cycleState) return NextResponse.json({ error: '无活跃周期' }, { status: 400 });
 
@@ -61,15 +61,13 @@ export async function POST(req: NextRequest) {
     };
 
     state.targets = newTargets;
-    setUserState(userId, state);
+    await setUserStateAsync(userId, state);
 
     return NextResponse.json({
-      success: true,
-      adjustment,
-      previousCarbs: state.cycleState.targetCarbs,
+      success: true, adjustment,
+      previousCarbs: newTargets.carbs,
       newCarbs: newTargets.carbs,
-      newTargets,
-      nextCycleNumber,
+      newTargets, nextCycleNumber,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

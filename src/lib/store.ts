@@ -1,6 +1,10 @@
-// In-memory data store with per-user JSON file persistence
+/**
+ * In-memory data store with Upstash Redis persistence.
+ * Data survives deployments and cold starts.
+ */
 import * as fs from 'fs';
 import { parseToken } from './auth';
+import redis from './kv';
 
 export interface User {
   id: string;
@@ -56,45 +60,100 @@ export interface UserState {
   targets: { carbs: number; protein: number; fat: number; calories: number } | null;
 }
 
-const DATA_DIR = '/tmp/fatloss_users';
+const LOCAL_DATA_DIR = '/tmp/fatloss_users';
 
-function getUserFile(userId: string): string {
-  return `${DATA_DIR}/user_${userId}.json`;
+// ── Local fallback for dev without Redis ────────────────────────
+
+function getLocalUserFile(userId: string): string {
+  return `${LOCAL_DATA_DIR}/user_${userId}.json`;
 }
 
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+function ensureLocalDir(): void {
+  if (!fs.existsSync(LOCAL_DATA_DIR)) {
+    fs.mkdirSync(LOCAL_DATA_DIR, { recursive: true });
   }
 }
 
-export function getUserState(userId: string): UserState {
-  ensureDataDir();
-  const file = getUserFile(userId);
+function readLocalUserState(userId: string): UserState {
+  ensureLocalDir();
+  const file = getLocalUserFile(userId);
   try {
     if (fs.existsSync(file)) {
-      const data = fs.readFileSync(file, 'utf-8');
-      return JSON.parse(data);
+      return JSON.parse(fs.readFileSync(file, 'utf-8'));
     }
   } catch (e) {
-    console.error('Failed to load user state:', e);
+    console.error('[store] Failed to read local user state:', e);
   }
-  return {
-    user: null,
-    currentWeight: 0,
-    dailyLogs: {},
-    cycleState: null,
-    targets: null,
-  };
+  return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
 }
 
-export function setUserState(userId: string, state: UserState): void {
-  ensureDataDir();
-  const file = getUserFile(userId);
+function writeLocalUserState(userId: string, state: UserState): void {
+  ensureLocalDir();
+  const file = getLocalUserFile(userId);
   try {
     fs.writeFileSync(file, JSON.stringify(state, null, 2));
   } catch (e) {
-    console.error('Failed to save user state:', e);
+    console.error('[store] Failed to write local user state:', e);
+  }
+}
+
+function isRedisConfigured(): boolean {
+  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
+
+// ── In-memory cache (resets on cold start, but writes go to Redis) ─
+
+const memoryCache: Record<string, UserState> = {};
+
+export function getUserState(userId: string): UserState {
+  if (isRedisConfigured()) {
+    if (!(userId in memoryCache)) {
+      // Sync read from Redis not possible here — caller must use getUserStateAsync
+      // Return empty state as placeholder; actual data loaded async
+      memoryCache[userId] = { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
+    }
+    return memoryCache[userId];
+  }
+  return readLocalUserState(userId);
+}
+
+export function setUserState(userId: string, state: UserState): void {
+  if (isRedisConfigured()) {
+    memoryCache[userId] = state;
+    return;
+  }
+  writeLocalUserState(userId, state);
+}
+
+// ── Async versions (for API routes) ─────────────────────────────
+
+export async function getUserStateAsync(userId: string): Promise<UserState> {
+  if (isRedisConfigured()) {
+    try {
+      const raw = await redis.get<string>(`user:${userId}`);
+      if (raw) {
+        const state = JSON.parse(raw) as UserState;
+        memoryCache[userId] = state;
+        return state;
+      }
+    } catch (e) {
+      console.error('[store] Redis read error:', e);
+    }
+    return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
+  }
+  return readLocalUserState(userId);
+}
+
+export async function setUserStateAsync(userId: string, state: UserState): Promise<void> {
+  memoryCache[userId] = state;
+  if (isRedisConfigured()) {
+    try {
+      await redis.set(`user:${userId}`, JSON.stringify(state));
+    } catch (e) {
+      console.error('[store] Redis write error:', e);
+    }
+  } else {
+    writeLocalUserState(userId, state);
   }
 }
 
@@ -110,7 +169,8 @@ export function getUserIdFromRequest(request: Request): string | null {
   return null;
 }
 
-// Food database
+// ── Food database ────────────────────────────────────────────────
+
 export const FOODS = [
   { id: 1, name: '白米饭', carbs: 28, protein: 2.5, fat: 0.3, sodium: 1, unit: 'g', per: 100 },
   { id: 2, name: '糙米饭', carbs: 26, protein: 2.6, fat: 0.8, sodium: 2, unit: 'g', per: 100 },

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserState, setUserState, getUserIdFromRequest, type FoodLogEntry } from '@/lib/store';
+import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest, type FoodLogEntry } from '@/lib/store';
 
 export async function GET(req: NextRequest) {
   try {
     const userId = getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     const today = new Date().toISOString().split('T')[0];
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少必要字段' }, { status: 400 });
     }
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     const today = new Date().toISOString().split('T')[0];
@@ -38,15 +38,13 @@ export async function POST(req: NextRequest) {
     }
 
     const entry: FoodLogEntry = {
-      id: crypto.randomUUID(),
-      name, weight,
+      id: crypto.randomUUID(), name, weight,
       carbs: Math.round(carbs || 0),
       protein: Math.round(protein || 0),
       fat: Math.round(fat || 0),
       sodium: Math.round(sodium || 0),
       calories: Math.round(calories || 0),
-      meal,
-      timestamp: new Date().toISOString(),
+      meal, timestamp: new Date().toISOString(),
     };
 
     state.dailyLogs[today].foods.push(entry);
@@ -56,7 +54,7 @@ export async function POST(req: NextRequest) {
     state.dailyLogs[today].totalSodium += entry.sodium;
     state.dailyLogs[today].calories += entry.calories;
 
-    setUserState(userId, state);
+    await setUserStateAsync(userId, state);
     return NextResponse.json({ success: true, entry });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -72,7 +70,7 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: '缺少 id' }, { status: 400 });
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     const today = new Date().toISOString().split('T')[0];
@@ -89,7 +87,7 @@ export async function DELETE(req: NextRequest) {
     log.totalSodium -= removed.sodium;
     log.calories -= removed.calories;
 
-    setUserState(userId, state);
+    await setUserStateAsync(userId, state);
     return NextResponse.json({ success: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

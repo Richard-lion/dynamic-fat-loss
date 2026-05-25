@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserState, getUserIdFromRequest, FOODS } from '@/lib/store';
+import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest, FOODS } from '@/lib/store';
 
 export async function GET(req: NextRequest) {
   try {
     const userId = getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: '未授权' }, { status: 401 });
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     const today = new Date().toISOString().split('T')[0];
@@ -17,16 +17,12 @@ export async function GET(req: NextRequest) {
     let todayLog = state.dailyLogs[today];
     if (!todayLog) {
       todayLog = {
-        date: today,
-        weight: null,
-        foods: [],
-        totalCarbs: 0,
-        totalProtein: 0,
-        totalFat: 0,
-        totalSodium: 0,
-        calories: 0,
+        date: today, weight: null, foods: [],
+        totalCarbs: 0, totalProtein: 0, totalFat: 0, totalSodium: 0, calories: 0,
       };
       state.dailyLogs[today] = todayLog;
+      // Auto-save new day
+      await setUserStateAsync(userId, state);
     }
 
     const targets = state.targets || { carbs: 0, protein: 0, fat: 0, calories: 0 };
@@ -39,8 +35,7 @@ export async function GET(req: NextRequest) {
     const sodiumColor = sodiumMg < 1800 ? 'green' : sodiumMg < 2300 ? 'yellow' : 'red';
 
     return NextResponse.json({
-      user: state.user,
-      today,
+      user: state.user, today,
       dayIndex: Math.max(0, dayIndex),
       dayOfCycle: Math.max(1, dayOfCycle),
       daysLeftInCycle: Math.max(0, daysLeftInCycle),
@@ -48,12 +43,9 @@ export async function GET(req: NextRequest) {
       totalDays: state.user.totalDurationDays,
       weight: state.currentWeight,
       todayWeight: todayLog.weight,
-      todayLog,
-      targets,
+      todayLog, targets,
       cycleState: state.cycleState,
-      sodiumMg,
-      sodiumPercent,
-      sodiumColor,
+      sodiumMg, sodiumPercent, sodiumColor,
       foodDatabase: FOODS,
     });
   } catch (e: any) {

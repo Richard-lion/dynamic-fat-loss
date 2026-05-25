@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserState, setUserState, getUserIdFromRequest } from '@/lib/store';
+import { getUserStateAsync, setUserStateAsync, getUserIdFromRequest } from '@/lib/store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '体重数值不合理' }, { status: 400 });
     }
 
-    const state = getUserState(userId);
+    const state = await getUserStateAsync(userId);
     if (!state.user) return NextResponse.json({ error: '用户不存在' }, { status: 401 });
 
     const today = new Date().toISOString().split('T')[0];
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
     state.currentWeight = weight;
 
-    setUserState(userId, state);
+    await setUserStateAsync(userId, state);
     return NextResponse.json({ success: true, weight });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
