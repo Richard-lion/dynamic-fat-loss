@@ -52,12 +52,27 @@ export interface CycleState {
   settled: boolean;
 }
 
+export interface FavoriteFood {
+  id: string;
+  name: string;
+  weight: number;
+  carbs: number;
+  protein: number;
+  fat: number;
+  sodium: number;
+  calories: number;
+  unit: string;
+  per: number;
+  createdAt: string;
+}
+
 export interface UserState {
   user: User | null;
   currentWeight: number;
   dailyLogs: Record<string, DailyLog>;
   cycleState: CycleState | null;
   targets: { carbs: number; protein: number; fat: number; calories: number } | null;
+  favorites: FavoriteFood[];
 }
 
 const LOCAL_DATA_DIR = '/tmp/fatloss_users';
@@ -84,7 +99,7 @@ function readLocalUserState(userId: string): UserState {
   } catch (e) {
     console.error('[store] Failed to read local user state:', e);
   }
-  return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
+  return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null, favorites: [] };
 }
 
 function writeLocalUserState(userId: string, state: UserState): void {
@@ -108,7 +123,7 @@ const memoryCache: Record<string, UserState> = {};
 export function getUserState(userId: string): UserState {
   if (isRedisConfigured()) {
     if (!(userId in memoryCache)) {
-      memoryCache[userId] = { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
+      memoryCache[userId] = { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null, favorites: [] };
     }
     return memoryCache[userId];
   }
@@ -132,7 +147,7 @@ export async function getUserStateAsync(userId: string): Promise<UserState> {
       memoryCache[userId] = state;
       return state;
     }
-    return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null };
+    return { user: null, currentWeight: 0, dailyLogs: {}, cycleState: null, targets: null, favorites: [] };
   }
   return readLocalUserState(userId);
 }

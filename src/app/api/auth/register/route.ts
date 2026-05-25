@@ -42,9 +42,10 @@ export async function POST(req: NextRequest) {
         createdAt: new Date().toISOString(),
       },
       currentWeight: 0,
-      dailyLogs: {},
-      cycleState: null,
-      targets: null,
+      dailyLogs: {} as Record<string, any>,
+      cycleState: null as null,
+      targets: null as null,
+      favorites: [] as any[],
     };
 
     // Persist user state to Redis

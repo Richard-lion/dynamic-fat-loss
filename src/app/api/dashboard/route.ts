@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       cycleState: state.cycleState,
       sodiumMg, sodiumPercent, sodiumColor,
       foodDatabase: FOODS,
+      favorites: state.favorites || [],
     });
   } catch (e: any) {
     console.error('dashboard error:', e);

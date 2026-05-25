@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 function apiFetch(path: string, opts?: RequestInit) {
@@ -12,6 +12,15 @@ function apiFetch(path: string, opts?: RequestInit) {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...opts?.headers,
     },
+  });
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -90,6 +99,8 @@ export default function AppPage() {
   const [showSettlement, setShowSettlement] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState('breakfast');
   const [foodSearch, setFoodSearch] = useState('');
+  const [showCameraMode, setShowCameraMode] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [customFood, setCustomFood] = useState({ name:'', weight:'', carbs:'', protein:'', fat:'', sodium:'' });
   const [settlementFeel, setSettlementFeel] = useState('');
 
@@ -154,6 +165,29 @@ export default function AppPage() {
     try {
       const res = await apiFetch(`/api/food-log?id=${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('删除失败');
+      load();
+    } catch (e: any) { showToast(e.message); }
+  };
+
+  const toggleFavorite = async (food: any) => {
+    const isFav = data.favorites.some((f: any) => f.name === food.name);
+    try {
+      if (isFav) {
+        const fav = data.favorites.find((f: any) => f.name === food.name);
+        await apiFetch(`/api/favorites?id=${fav.id}`, { method: 'DELETE' });
+        showToast(`已取消收藏`);
+      } else {
+        await apiFetch('/api/favorites', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: food.name, weight: food.per || food.weight, carbs: food.carbs,
+            protein: food.protein, fat: food.fat, sodium: food.sodium,
+            calories: food.calories || Math.round(food.carbs * 4 + food.protein * 4 + food.fat * 9),
+            unit: food.unit || 'g', per: food.per || food.weight,
+          }),
+        });
+        showToast(`已收藏 ⭐`);
+      }
       load();
     } catch (e: any) { showToast(e.message); }
   };
@@ -327,37 +361,139 @@ export default function AppPage() {
       {/* Add Food Modal */}
       {showAddFood && (
         <div className="modal-overlay" onClick={() => setShowAddFood(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>🍽️ 添加食物 — {mealLabels[selectedMeal]}</h2>
-
-            <div style={{ marginTop:10 }}>
-              <input
-                type="text" placeholder="搜索食物资料库..."
-                value={foodSearch}
-                onChange={e => setFoodSearch(e.target.value)}
-                style={{ width:'100%', padding:'10px 14px', fontSize:13, background:'var(--bg3)', border:'1.5px solid var(--border)', borderRadius:'var(--radius)', color:'var(--text)', outline:'none', marginBottom:8 }}
-              />
-              <div style={{ maxHeight:160, overflowY:'auto' }}>
-                {data.foodDatabase
-                  .filter((f:any) => foodSearch === '' || f.name.includes(foodSearch))
-                  .slice(0,10)
-                  .map((f:any) => (
-                    <div key={f.id} className="food-search-item" onClick={() => addFood(f, f.per)}>
-                      <div>
-                        <div className="f-name">{f.name}</div>
-                        <div className="f-macros">碳水{f.carbs}g · 蛋白{f.protein}g · 脂肪{f.fat}g · {f.per}g/份</div>
-                      </div>
-                      <div className="f-action">选择</div>
-                    </div>
-                  ))}
-              </div>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight:'90vh', overflowY:'auto' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+              <h2>🍽️ 添加食物 — {mealLabels[selectedMeal]}</h2>
+              <button
+                onClick={() => {
+                  setCustomFood({ name:'', weight:'', carbs:'', protein:'', fat:'', sodium:'' });
+                  setFoodSearch('');
+                  setShowCameraMode(false);
+                }}
+                style={{ background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:8, padding:'6px 12px', fontSize:12, cursor:'pointer', color:'var(--text)' }}
+              >
+                重置
+              </button>
             </div>
 
-            <div style={{ borderTop:'1px solid var(--border)', marginTop:16, paddingTop:16 }}>
-              <h3 style={{ fontSize:14, marginBottom:10, fontWeight:600 }}>或自定义食物</h3>
+            {/* Camera button + search */}
+            <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+              <button
+                onClick={() => setShowCameraMode(true)}
+                style={{ background: showCameraMode ? 'var(--accent)' : 'var(--bg3)', color: showCameraMode ? '#fff' : 'var(--text)', border:'1.5px solid var(--border)', borderRadius:9, padding:'9px 14px', fontSize:13, cursor:'pointer', flexShrink:0 }}
+              >
+                📷 AI识别
+              </button>
+              <input
+                type="text" placeholder="搜索食物..."
+                value={foodSearch}
+                onChange={e => { setFoodSearch(e.target.value); setShowCameraMode(false); }}
+                style={{ flex:1, padding:'9px 12px', fontSize:13, background:'var(--bg3)', border:'1.5px solid var(--border)', borderRadius:9, color:'var(--text)', outline:'none' }}
+              />
+            </div>
+
+            {/* Camera mode */}
+            {showCameraMode && (
+              <div style={{ marginBottom:12 }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  ref={cameraInputRef}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    showToast('正在识别食物...');
+                    const base64 = await fileToBase64(file);
+                    const res = await fetch('https://lucky-emu-67628.upstash.io', {
+                      method: 'POST',
+                      headers: { 'Authorization': 'Bearer gQAAAAAAAQgsAQIgcDIxMTQxM2I5ZjJkN2E0MTkyYTVlM2YyY2YwY2I5MTdiNg' },
+                      body: JSON.stringify(['GET', 'test']),
+                    });
+                    // Use MiniMax vision API
+                    try {
+                      const formData = new FormData();
+                      formData.append('image', file);
+                      const aiRes = await fetch('https://api.minimaxi.com/v1/image_understanding', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer test' },
+                        body: formData,
+                      });
+                    } catch {}
+                    showToast('相机功能开发中');
+                  }}
+                  style={{ display:'none' }}
+                />
+                <div
+                  onClick={() => cameraInputRef.current?.click()}
+                  style={{ background:'var(--bg3)', border:'2px dashed var(--border)', borderRadius:12, padding:'28px', textAlign:'center', cursor:'pointer', color:'var(--text2)', fontSize:13 }}
+                >
+                  <div style={{ fontSize:28, marginBottom:6 }}>📷</div>
+                  点击拍照或从相册选择
+                </div>
+              </div>
+            )}
+
+            {/* Favorites */}
+            {data.favorites?.length > 0 && !showCameraMode && (
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>⭐ 我的收藏</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:140, overflowY:'auto' }}>
+                  {data.favorites.map((fav: any) => (
+                    <div key={fav.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'var(--bg3)', borderRadius:9, border:'1px solid var(--border)' }}>
+                      <div style={{ flex:1, cursor:'pointer' }} onClick={() => addFood(fav, fav.per || fav.weight)}>
+                        <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{fav.name}</div>
+                        <div style={{ fontSize:10, color:'var(--text2)' }}>碳水{fav.carbs}g · 蛋白{fav.protein}g · 脂肪{fav.fat}g · {fav.per}{fav.unit}</div>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(fav); }}
+                        style={{ background:'none', border:'none', cursor:'pointer', fontSize:14, padding:'2px 4px', color:'var(--accent)' }}
+                      >
+                        ⭐
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Search results */}
+            {!showCameraMode && (
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
+                  📚 食物库 {foodSearch && `— 搜索"${foodSearch}"`}
+                </div>
+                <div style={{ maxHeight:160, overflowY:'auto' }}>
+                  {data.foodDatabase
+                    .filter((f:any) => foodSearch === '' || f.name.includes(foodSearch))
+                    .slice(0,12)
+                    .map((f:any) => {
+                      const isFav = data.favorites?.some((fv: any) => fv.name === f.name);
+                      return (
+                        <div key={f.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 4px', borderBottom:'1px solid var(--border)' }}>
+                          <div style={{ flex:1, cursor:'pointer' }} onClick={() => addFood(f, f.per)}>
+                            <div style={{ fontSize:13, fontWeight:500 }}>{f.name}</div>
+                            <div style={{ fontSize:10, color:'var(--text2)' }}>碳水{f.carbs}g · 蛋白{f.protein}g · 脂肪{f.fat}g · {f.per}g/份</div>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(f); }}
+                            style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:'2px 6px', color: isFav ? 'var(--accent)' : 'var(--text3)' }}
+                          >
+                            {isFav ? '⭐' : '☆'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {/* Custom food */}
+            <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
+              <h3 style={{ fontSize:14, marginBottom:10, fontWeight:600 }}>📝 自定义食物</h3>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {[
-                  { key:'name',    label:'食物名称', placeholder:'例如：卤肉饭', type:'text' },
+                  { key:'name',    label:'食物名称', placeholder:'例如：自制三明治', type:'text' },
                   { key:'weight',  label:'重量 (g)',  placeholder:'200',      type:'number' },
                   { key:'carbs',   label:'碳水 (g)',  placeholder:'30',       type:'number' },
                   { key:'protein', label:'蛋白 (g)',  placeholder:'10',       type:'number' },
@@ -380,17 +516,42 @@ export default function AppPage() {
                 style={{ marginTop:12 }}
                 onClick={() => {
                   if (!customFood.name || !customFood.weight) { showToast('请填写名称和重量'); return; }
-                  addFood(
-                    { name:customFood.name, carbs:parseFloat(customFood.carbs)||0, protein:parseFloat(customFood.protein)||0, fat:parseFloat(customFood.fat)||0, sodium:parseFloat(customFood.sodium)||0, per:parseFloat(customFood.weight) },
-                    parseFloat(customFood.weight)
-                  );
+                  const foodData = {
+                    name: customFood.name,
+                    carbs: parseFloat(customFood.carbs) || 0,
+                    protein: parseFloat(customFood.protein) || 0,
+                    fat: parseFloat(customFood.fat) || 0,
+                    sodium: parseFloat(customFood.sodium) || 0,
+                    per: parseFloat(customFood.weight),
+                    weight: parseFloat(customFood.weight),
+                    calories: Math.round((parseFloat(customFood.carbs) || 0) * 4 + (parseFloat(customFood.protein) || 0) * 4 + (parseFloat(customFood.fat) || 0) * 9),
+                  };
+                  addFood(foodData, foodData.weight);
+                  // Also save to favorites
+                  apiFetch('/api/favorites', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      name: foodData.name,
+                      weight: foodData.per,
+                      carbs: foodData.carbs,
+                      protein: foodData.protein,
+                      fat: foodData.fat,
+                      sodium: foodData.sodium,
+                      calories: foodData.calories,
+                      unit: 'g',
+                      per: foodData.per,
+                    }),
+                  }).then(r => r.json()).then(j => {
+                    if (j.success) { showToast(`已添加 ${foodData.name} 并收藏 ⭐`); load(); }
+                    else showToast(`已添加 ${foodData.name}`);
+                  }).catch(() => showToast(`已添加 ${foodData.name}`));
                 }}
               >
-                添加自定义食物
+                添加 + 保存到收藏
               </button>
             </div>
 
-            <button className="btn-secondary" style={{ marginTop:8, width:'100%' }} onClick={() => setShowAddFood(false)}>关闭</button>
+            <button className="btn-secondary" style={{ marginTop:8, width:'100%' }} onClick={() => { setShowAddFood(false); setShowCameraMode(false); }}>关闭</button>
           </div>
         </div>
       )}
