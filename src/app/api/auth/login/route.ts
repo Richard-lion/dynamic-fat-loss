@@ -6,11 +6,12 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
-    if (!username || !password) {
+    const trimmed = (username || '').trim();
+    if (!trimmed || !password) {
       return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
     }
 
-    const account = getAccountByUsername(username);
+    const account = getAccountByUsername(trimmed);
     if (!account) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }

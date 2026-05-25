@@ -19,11 +19,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '密码至少 6 个字符' }, { status: 400 });
     }
 
-    if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) {
-      return NextResponse.json({ error: '用户名只能包含字母、数字、下划线和中文' }, { status: 400 });
+    // Allow: a-z A-Z 0-9 _ and Chinese characters
+    const trimmed = username.trim();
+
+    if (trimmed.length < 3 || trimmed.length > 30) {
+      return NextResponse.json({ error: '用户名需为 3-30 个字符' }, { status: 400 });
     }
 
-    if (usernameExists(username)) {
+    // Allow: a-z A-Z 0-9 _ and Chinese characters — reject spaces and special chars
+    if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(trimmed)) {
+      return NextResponse.json({ error: '用户名只能包含字母、数字、下划线或中文' }, { status: 400 });
+    }
+
+    if (usernameExists(trimmed)) {
       return NextResponse.json({ error: '用户名已存在' }, { status: 409 });
     }
 
@@ -31,7 +39,7 @@ export async function POST(req: NextRequest) {
     const userId = crypto.randomUUID();
 
     // Create account
-    createAccount(username, passwordHash, userId);
+    createAccount(trimmed, passwordHash, userId);
 
     // Initialize user state (empty - onboarding will fill it)
     const state = getUserState(userId);
