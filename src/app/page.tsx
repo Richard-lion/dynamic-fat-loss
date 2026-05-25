@@ -35,7 +35,7 @@ export default function OnboardingPage() {
   const [weight, setWeight] = useState('');
   const [workoutLevel, setWorkoutLevel] = useState('');
   const [duration, setDuration] = useState(60);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // If not logged in, redirect to login
@@ -53,12 +53,15 @@ export default function OnboardingPage() {
           router.push('/app'); // Already onboarded → go to dashboard
         }
         // Otherwise (401) → stay on onboarding to set up data
+        setLoading(false);
       } catch {
-        // Stay on onboarding
+        setLoading(false);
       }
     };
     checkUser();
   }, [router]);
+
+  if (loading) return null;
 
   const canProceed = () => {
     if (step === 1) return gender !== '';
