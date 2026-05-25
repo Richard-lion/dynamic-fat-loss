@@ -61,10 +61,16 @@ export default function OnboardingPage() {
     try {
       const res = await fetch('/api/auth/session');
       if (res.ok) {
-        // Cookie session valid — restore to localStorage and go to app
+        // Cookie session valid — restore to localStorage
         const data = await res.json();
-        localStorage.setItem('fl_token', data.token || '');
-        router.push('/app');
+        localStorage.setItem('fl_token', data.token);
+        // Check if onboarding is complete
+        const dashRes = await fetch('/api/dashboard', {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        if (dashRes.ok) { router.push('/app'); return; }
+        // Not onboarded — go to onboarding
+        router.push('/');
         return;
       }
     } catch {}
