@@ -37,7 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      router.push('/');
+      // New user has no onboarding data — go to app which handles onboarding check
+      router.push('/app');
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -65,7 +66,7 @@ export default function LoginPage() {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       if (stateRes.status === 401) {
-        router.push('/');
+        router.push('/app');
       } else {
         router.push('/app');
       }
