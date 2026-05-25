@@ -25,9 +25,9 @@ function ProgressRing({ value, max, label, unit, color, size = 80 }: any) {
     <div className="ring-card">
       <div style={{ width: size, height: size, margin: '0 auto 8px', position: 'relative' }}>
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle className="bg" cx={size/2} cy={size/2} r={r} />
+          <circle className="bg" cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border)" strokeWidth={7} />
           <circle className="fg" cx={size/2} cy={size/2} r={r}
-            stroke={color} strokeDasharray={circ} strokeDashoffset={offset} />
+            fill="none" stroke={color} strokeWidth={7} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
         </svg>
         <div className="ring-chart center-text">
           <span className="num" style={{ fontSize: 14 }}>{value}</span>

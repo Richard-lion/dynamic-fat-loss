@@ -239,7 +239,7 @@ body {
 }
 .ring-chart svg { transform: rotate(-90deg); }
 .ring-chart circle { fill: none; stroke-width: 7; }
-.ring-chart .bg   { stroke: var(--border); }
+.ring-chart .bg   { stroke: var(--border) !important; }
 .ring-chart .fg   { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
 .ring-chart .fg.green  { stroke: var(--success); }
 .ring-chart .fg.orange  { stroke: var(--warn); }
