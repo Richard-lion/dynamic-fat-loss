@@ -50,7 +50,15 @@ export async function POST(req: NextRequest) {
     // Note: we deliberately don't save state here — onboarding will do it
 
     const token = makeToken(userId);
-    return NextResponse.json({ success: true, token, userId });
+    const response = NextResponse.json({ success: true, token, userId });
+    response.cookies.set('fl_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    });
+    return response;
   } catch (e: any) {
     console.error('register error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

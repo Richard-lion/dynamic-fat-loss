@@ -21,7 +21,15 @@ export async function POST(req: NextRequest) {
     }
 
     const token = makeToken(account.userId);
-    return NextResponse.json({ success: true, token, userId: account.userId });
+    const response = NextResponse.json({ success: true, token, userId: account.userId });
+    response.cookies.set('fl_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/',
+    });
+    return response;
   } catch (e: any) {
     console.error('login error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

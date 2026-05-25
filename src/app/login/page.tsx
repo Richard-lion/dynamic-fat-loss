@@ -26,10 +26,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // If already logged in, redirect to app
+  // If already logged in (cookie or localStorage), redirect to home
   useEffect(() => {
     const token = localStorage.getItem('fl_token');
-    if (token) router.replace('/app');
+    if (token) router.replace('/');
   }, [router]);
 
   const handleRegister = async () => {
