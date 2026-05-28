@@ -16,7 +16,7 @@ export async function POST() {
     const allKeys: string[] = scanData.result?.[1] || [];
 
     // Delete all found keys + accounts
-    const keysToDel = [...new Set([...allKeys, 'accounts'])];
+    const keysToDel = Array.from(new Set([...allKeys, 'accounts']));
 
     let deleted = 0;
     if (keysToDel.length > 0) {
