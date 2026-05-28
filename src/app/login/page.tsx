@@ -61,18 +61,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-
-      // Check if user has completed onboarding
-      const stateRes = await fetch('/api/dashboard', {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      if (stateRes.status === 401) {
-        // User exists (logged in) but hasn't done onboarding → go to onboarding
-        router.push('/');
-      } else {
-        // Fully set up → go to dashboard
-        router.push('/app');
-      }
+      // Force hard navigation so / page re-mounts and re-runs auth check
+      window.location.href = '/';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
