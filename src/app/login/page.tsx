@@ -37,8 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // New user has no onboarding data — redirect to onboarding page (/)
-      router.push('/');
+      // Hard navigation so / page re-mounts and re-runs auth check
+      window.location.href = '/';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
