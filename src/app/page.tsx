@@ -57,30 +57,21 @@ export default function OnboardingPage() {
     }
   }, [router]);
 
-  const tryCookieSession = async () => {
-    try {
-      const res = await fetch('/api/auth/session');
-      if (res.ok) {
-        // Cookie session valid — restore to localStorage
-        const data = await res.json();
-        localStorage.setItem('fl_token', data.token);
-        // Check if onboarding is complete
-        const dashRes = await fetch('/api/dashboard', {
-          headers: { Authorization: `Bearer ${data.token}` },
-        });
-        if (dashRes.ok) { router.push('/app'); return; }
-        // Not onboarded — go to onboarding
-        router.push('/');
-        return;
-      }
-    } catch {}
-    // No valid session — go to login
-    router.push('/login');
-  };
-
   const tryLocalStorageFallback = async () => {
     // Token was invalid — try cookie as fallback
-    tryCookieSession();
+    const cookieRes = await fetch('/api/auth/session');
+    if (cookieRes.ok) {
+      const data = await cookieRes.json();
+      localStorage.setItem('fl_token', data.token);
+      const dashRes = await fetch('/api/dashboard', {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      if (dashRes.ok) { router.push('/app'); return; }
+      // Cookie session valid but no onboarding → stay on this page (loading already false)
+      return;
+    }
+    // No cookie session either — go to login
+    router.push('/login');
   };
 
   if (loading) return (
