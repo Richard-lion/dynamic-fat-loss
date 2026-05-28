@@ -30,17 +30,9 @@ export async function POST(req: NextRequest) {
 
     // Create account in Redis
     await kvCreateAccount(trimmed, passwordHash, userId);
-
-    // Initialize user state
+    // Initialize EMPTY user state — onboarding will handle profile setup
     const state = {
-      user: {
-        id: userId,
-        gender: 'male' as const,
-        workoutLevel: '4-5',
-        totalDurationDays: 60,
-        startDate: new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
-      },
+      user: null,
       currentWeight: 0,
       dailyLogs: {} as Record<string, any>,
       cycleState: null as null,

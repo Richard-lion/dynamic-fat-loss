@@ -107,9 +107,9 @@ export default function AppPage() {
   const load = useCallback(async () => {
     try {
       const res = await apiFetch('/api/dashboard');
-      if (res.status === 401) { router.push('/'); return; }
+      if (res.status === 401) { router.push('/login'); return; }
       const json = await res.json();
-      if (json.error) { router.push('/'); return; }
+      if (json.error === '用户不存在') { router.push('/'); return; }
       setData(json);
       const w = json.todayWeight ?? json.weight ?? '';
       setWeightInput(w ? String(w) : '');
@@ -420,7 +420,6 @@ export default function AppPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   ref={cameraInputRef}
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
