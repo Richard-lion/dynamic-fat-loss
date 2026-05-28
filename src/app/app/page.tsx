@@ -425,24 +425,29 @@ export default function AppPage() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    showToast('正在识别食物...');
-                    const base64 = await fileToBase64(file);
-                    const res = await fetch('https://lucky-emu-67628.upstash.io', {
-                      method: 'POST',
-                      headers: { 'Authorization': 'Bearer gQAAAAAAAQgsAQIgcDIxMTQxM2I5ZjJkN2E0MTkyYTVlM2YyY2YwY2I5MTdiNg' },
-                      body: JSON.stringify(['GET', 'test']),
-                    });
-                    // Use MiniMax vision API
+                    showToast('正在AI识别食物...');
                     try {
                       const formData = new FormData();
                       formData.append('image', file);
-                      const aiRes = await fetch('https://api.minimaxi.com/v1/image_understanding', {
+                      const res = await fetch('/api/recognize-food', {
                         method: 'POST',
-                        headers: { 'Authorization': 'Bearer test' },
                         body: formData,
                       });
-                    } catch {}
-                    showToast('相机功能开发中');
+                      const json = await res.json();
+                      if (!res.ok) throw new Error(json.error || '识别失败');
+                      showToast(`识别到: ${json.name} ${json.weight}g`);
+                      setCustomFood({
+                        name: String(json.name),
+                        weight: String(json.weight),
+                        carbs: String(json.carbs),
+                        protein: String(json.protein),
+                        fat: String(json.fat),
+                        sodium: String(json.sodium),
+                      });
+                      setShowCameraMode(false);
+                    } catch (err: any) {
+                      showToast(err.message || '识别失败，请重试');
+                    }
                   }}
                   style={{ display:'none' }}
                 />
