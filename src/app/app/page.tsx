@@ -283,10 +283,10 @@ export default function AppPage() {
 
         {/* Macro Rings */}
         <div className="ring-grid">
-          <ProgressRing value={todayLog.calories}     max={targets.calories||2000} label="热量" unit="kcal" color={kcalPct>100 ? 'var(--danger)' : 'var(--accent)'} size={80} />
-          <ProgressRing value={todayLog.totalCarbs}   max={targets.carbs||150}     label="碳水" unit="g"   color={carbsPct>100  ? 'var(--warn)' : '#3a9e6e'} size={80} />
-          <ProgressRing value={todayLog.totalProtein}  max={targets.protein||100}   label="蛋白" unit="g"   color="var(--accent)" size={80} />
-          <ProgressRing value={todayLog.totalFat}      max={targets.fat||60}         label="脂肪" unit="g"   color={fatPct>100 ? 'var(--warn)' : '#d4880a'} size={80} />
+          <ProgressRing value={todayLog.calories}     max={targets.calories||2000} label="热量" unit="kcal" color={kcalPct>100 ? 'var(--danger)' : 'var(--accent)'} size={110} />
+          <ProgressRing value={todayLog.totalCarbs}   max={targets.carbs||150}     label="碳水" unit="g"   color={carbsPct>100  ? 'var(--warn)' : '#3a9e6e'} size={72} />
+          <ProgressRing value={todayLog.totalProtein}  max={targets.protein||100}   label="蛋白" unit="g"   color="var(--accent)" size={72} />
+          <ProgressRing value={todayLog.totalFat}      max={targets.fat||60}         label="脂肪" unit="g"   color={fatPct>100 ? 'var(--warn)' : '#d4880a'} size={72} />
         </div>
 
         {/* Sodium */}
