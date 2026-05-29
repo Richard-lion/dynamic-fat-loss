@@ -278,14 +278,7 @@ export default function AppPage() {
 
         {/* Tip */}
         <div className="tip-box">
-          💡 体重短期波动多为水分或盐分滞留，请专注 7 天移动平均线的下滑趋势！
-        </div>
-
-        {/* Info Pills */}
-        <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' }}>
-          <div className="pill">📅 第 <span className="val">{dayIndex+1}</span> 天</div>
-          <div className="pill">⏱️ 剩余 <span className="val">{totalDays - dayIndex - 1}</span> 天</div>
-          <div className="pill">⚙️ 碳水 <span className="val">{targets.carbs}g</span></div>
+          💡 体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！
         </div>
 
         {/* Macro Rings */}
