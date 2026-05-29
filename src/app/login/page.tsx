@@ -37,6 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
+      // Set cookie for middleware auth — path=/ so it covers /app, /analytics, etc.
+      document.cookie = `fl_token=${data.token}; path=/; Max-Age=604800; SameSite=Lax`;
       // Hard navigation to dashboard — client-side check handles onboarding redirect
       window.location.href = '/app';
     } catch (e: any) {
@@ -61,6 +63,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
+      // Set cookie for middleware auth — path=/ so it covers /app, /analytics, etc.
+      document.cookie = `fl_token=${data.token}; path=/; Max-Age=604800; SameSite=Lax`;
       // Hard navigation to dashboard — client-side check handles onboarding redirect
       window.location.href = '/app';
     } catch (e: any) {
