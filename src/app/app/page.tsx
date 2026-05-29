@@ -342,7 +342,7 @@ export default function AppPage() {
                     <span style={{ fontSize:14, fontWeight:600 }}>{mealLabels[meal]}</span>
                   </div>
                   <div style={{ fontSize:11, color:'var(--text2)' }}>
-                    {foods.length > 0 ? `${mealCarbs}g碳水 · ${mealCal}kcal` : '点击添加'}
+                    {foods.length > 0 ? `${mealCarbs}g碳水 · ${mealCal}kcal` : <button style={{fontSize:16,color:'var(--coral)',background:'none',border:'none',cursor:'pointer',padding:'0 4px',fontWeight:300}}>+</button>}
                   </div>
                 </div>
                 <div style={{ paddingBottom:4 }}>
