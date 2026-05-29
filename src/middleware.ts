@@ -13,6 +13,9 @@ export function middleware(request: NextRequest) {
   const token = cookieToken ?? bearerToken;
 
   if (!token && isProtected) {
+    // No token found — check if there's a fl_token in localStorage by redirecting to a
+    // client-side check page that can read localStorage and redirect properly.
+    // For now, redirect to /login (most common case: hard nav without session).
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

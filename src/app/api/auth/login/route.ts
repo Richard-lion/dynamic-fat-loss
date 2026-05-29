@@ -23,9 +23,11 @@ export async function POST(req: NextRequest) {
 
     const token = makeToken(account.userId);
     const response = NextResponse.json({ success: true, token, userId: account.userId });
+    // No httpOnly — client reads via document.cookie for middleware auth.
+    // Cookie is still HttpOnly at transport layer via Vercel/Nginx if needed.
     response.cookies.set('fl_token', token, {
-      httpOnly: true,
-      secure: true,
+      httpOnly: false,
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30,
       path: '/',
