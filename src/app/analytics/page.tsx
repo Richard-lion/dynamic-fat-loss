@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
         {/* Weight Chart */}
         <div className="card">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-            <h3 style={{ fontSize:14, fontWeight:600 }}>📉 体重趋势</h3>
+            <h3 style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>体重趋势</h3>
             <div style={{ display:'flex', gap:12, fontSize:11, color:'var(--text2)' }}>
               <div style={{ display:'flex', alignItems:'center', gap:5 }}>
                 <div style={{ width:18, height:2, background:'var(--text2)', borderRadius:1 }} />
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
 
         {/* Macro Distribution */}
         <div className="card">
-          <h3 style={{ fontSize:14, fontWeight:600, marginBottom:14 }}>🥗 饮食结构（近 7 天）</h3>
+          <h3 style={{ fontSize:14, fontWeight:600, color:'var(--text)', marginBottom:14 }}>饮食结构</h3>
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {[
               { label:'碳水', value: macroPercentages?.carbs   || 0, color:'var(--accent)' },
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
 
         {/* Weight Log */}
         <div className="card">
-          <h3 style={{ fontSize:14, fontWeight:600, marginBottom:12 }}>📋 体重记录</h3>
+          <h3 style={{ fontSize:14, fontWeight:600, color:'var(--text)', marginBottom:12 }}>体重记录</h3>
           {weightData && weightData.length > 0 ? (
             <div style={{ maxHeight:200, overflowY:'auto' }}>
               {[...weightData].reverse().map((d:any, i:number) => (
