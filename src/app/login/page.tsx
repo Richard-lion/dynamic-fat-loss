@@ -37,8 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Soft nav: no middleware re-run, /app loads and calls API with localStorage token
-      router.push('/app');
+      // /app is no longer protected by middleware — hard nav works
+      window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -61,8 +61,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Soft nav: no middleware re-run, /app loads and calls API with localStorage token
-      router.push('/app');
+      // /app is no longer protected by middleware — hard nav works
+      window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
