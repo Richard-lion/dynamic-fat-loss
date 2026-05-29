@@ -74,6 +74,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   const tryLocalStorageFallback = async () => {
+    // Token was invalid — try cookie as fallback
     const cookieRes = await fetch('/api/auth/session');
     if (cookieRes.ok) {
       const data = await cookieRes.json();
@@ -82,25 +83,19 @@ export default function OnboardingPage() {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       if (dashRes.ok) { router.push('/app'); return; }
+      // Cookie session valid but no onboarding → stay on this page
       setLoading(false);
       return;
     }
+    // No cookie session either — go to login
     setLoading(false);
     router.push('/login');
   };
 
   if (loading) return (
-    <div className="loading-screen page-enter">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-        <div style={{ fontSize: 52, marginBottom: 8, animation: 'ringPop 0.6s cubic-bezier(0.22,1,0.36,1) both' }}>⚖️</div>
-        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>动态减脂拉锯战</div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 12 }}>
-          <div className="skeleton skeleton-text short" />
-          <div className="skeleton skeleton-text medium" />
-          <div className="spinner" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>加载中...</div>
-        </div>
-      </div>
+    <div className="loading-screen">
+      <div className="spinner" />
+      <div style={{ fontSize: 13, color: 'var(--text2)' }}>加载中...</div>
     </div>
   );
 
@@ -138,18 +133,18 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="container page-enter">
+    <div className="container">
       {/* Hero */}
       <div className="onboarding-hero">
-        <div style={{ fontSize: 52, marginBottom: 10, animation: 'ringPop 0.55s cubic-bezier(0.22,1,0.36,1) both' }}>⚖️</div>
+        <div style={{ fontSize: 52, marginBottom: 10 }}>⚖️</div>
         <h1>动态减脂拉锯战</h1>
         <p>告别固定热量的瓶颈<br />用 10 天周期科学调整营养目标</p>
       </div>
 
-      {error && <div className="error-box toast-enter">{error}</div>}
+      {error && <div className="error-box">{error}</div>}
 
       {/* Step Progress */}
-      <div className="step-dots" style={{ animation: 'pageEnter 0.32s 0.05s cubic-bezier(0.22,1,0.36,1) both' }}>
+      <div className="step-dots">
         {[1, 2, 3].map(s => (
           <div key={s} className={`step-dot ${s < step ? 'done' : s === step ? 'active' : ''}`} />
         ))}
