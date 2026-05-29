@@ -37,8 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Hard navigation so / page re-mounts and re-runs auth check
-      window.location.href = '/';
+      // Hard navigation to dashboard — client-side check handles onboarding redirect
+      window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -61,8 +61,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Force hard navigation so / page re-mounts and re-runs auth check
-      window.location.href = '/';
+      // Hard navigation to dashboard — client-side check handles onboarding redirect
+      window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
