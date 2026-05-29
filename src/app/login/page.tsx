@@ -37,10 +37,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Set cookie synchronously so it's available for the upcoming hard navigation
-      document.cookie = `fl_token=${data.token}; path=/; max-age=${60*60*24*30}; samesite=lax`;
-      // Small delay lets the browser commit the cookie before navigation fires
-      setTimeout(() => { window.location.href = '/app'; }, 50);
+      // Soft nav: no middleware re-run, /app loads and calls API with localStorage token
+      router.push('/app');
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -63,10 +61,8 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Set cookie synchronously so it's available for the upcoming hard navigation
-      document.cookie = `fl_token=${data.token}; path=/; max-age=${60*60*24*30}; samesite=lax`;
-      // Small delay lets the browser commit the cookie before navigation fires
-      setTimeout(() => { window.location.href = '/app'; }, 50);
+      // Soft nav: no middleware re-run, /app loads and calls API with localStorage token
+      router.push('/app');
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
