@@ -357,6 +357,41 @@ body {
 .sodium-fill.red     { background: var(--danger); }
 .sodium-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); }
 
+/* ── Login Card (Tab + Fields unified) ── */
+.login-card {
+  padding: 0;
+  overflow: hidden;
+}
+.login-tabs {
+  display: flex;
+  gap: 0;
+  padding: 6px;
+  background: var(--bg3);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--border);
+}
+.login-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.login-tab.active {
+  background: var(--bg2);
+  color: var(--accent);
+  box-shadow: var(--shadow-card);
+}
+.login-fields {
+  padding: 18px;
+}
+
 /* ── Onboarding Hero ── */
 .onboarding-hero { text-align: center; padding: 36px 0 28px; }
 .onboarding-hero .icon { font-size: 52px; margin-bottom: 12px; }
