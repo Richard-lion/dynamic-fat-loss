@@ -37,8 +37,10 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Soft nav: let browser commit the httpOnly cookie from the API response first
-      router.push('/app');
+      // Set cookie synchronously so it's available for the upcoming hard navigation
+      document.cookie = `fl_token=${data.token}; path=/; max-age=${60*60*24*30}; samesite=lax`;
+      // Small delay lets the browser commit the cookie before navigation fires
+      setTimeout(() => { window.location.href = '/app'; }, 50);
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -61,8 +63,10 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // Soft nav: let browser commit the httpOnly cookie from the API response first
-      router.push('/app');
+      // Set cookie synchronously so it's available for the upcoming hard navigation
+      document.cookie = `fl_token=${data.token}; path=/; max-age=${60*60*24*30}; samesite=lax`;
+      // Small delay lets the browser commit the cookie before navigation fires
+      setTimeout(() => { window.location.href = '/app'; }, 50);
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
