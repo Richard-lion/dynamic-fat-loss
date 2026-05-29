@@ -63,9 +63,11 @@ export default function OnboardingPage() {
           });
           if (dashRes.ok) { router.push('/app'); return; }
           // Cookie valid, no onboarding → stay on this page
+          setLoading(false);
           return;
         }
         // No cookie session — go to login
+        setLoading(false);
         router.push('/login');
       })();
     }
@@ -81,10 +83,12 @@ export default function OnboardingPage() {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       if (dashRes.ok) { router.push('/app'); return; }
-      // Cookie session valid but no onboarding → stay on this page (loading already false)
+      // Cookie session valid but no onboarding → stay on this page
+      setLoading(false);
       return;
     }
     // No cookie session either — go to login
+    setLoading(false);
     router.push('/login');
   };
 
