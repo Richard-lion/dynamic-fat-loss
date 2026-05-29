@@ -489,22 +489,13 @@ export default function AppPage() {
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <button
-                    className="btn-primary"
-                    style={{ flex:1, fontSize:13 }}
+                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:13, cursor:'pointer', color:'var(--text2)' }}
                     onClick={() => {
-                      setCustomFood({
-                        name: String(recognitionResult.name),
-                        weight: String(recognitionResult.weight),
-                        carbs: String(recognitionResult.carbs),
-                        protein: String(recognitionResult.protein),
-                        fat: String(recognitionResult.fat),
-                        sodium: String(recognitionResult.sodium),
-                      });
                       setRecognitionResult(null);
                       setShowCameraMode(false);
                     }}
                   >
-                    确认 — 填入表单
+                    取消
                   </button>
                   <button
                     style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:13, cursor:'pointer', color:'var(--text2)' }}
@@ -513,6 +504,24 @@ export default function AppPage() {
                     重拍
                   </button>
                 </div>
+                <button
+                  className="btn-primary"
+                  style={{ width:'100%', marginTop:8, fontSize:13 }}
+                  onClick={() => {
+                    setCustomFood({
+                      name: String(recognitionResult.name),
+                      weight: String(recognitionResult.weight),
+                      carbs: String(recognitionResult.carbs),
+                      protein: String(recognitionResult.protein),
+                      fat: String(recognitionResult.fat),
+                      sodium: String(recognitionResult.sodium),
+                    });
+                    setRecognitionResult(null);
+                    setShowCameraMode(false);
+                  }}
+                >
+                  确认 — 填入表单
+                </button>
               </div>
             )}
 
