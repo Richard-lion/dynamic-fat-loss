@@ -293,7 +293,7 @@ export default function AppPage() {
         <div className="sodium-section">
           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
             <span>🧂 钠摄入</span>
-            <span style={{ color: sodiumColor==='green'?'var(--success)':sodiumColor==='yellow'?'var(--warn)':'var(--danger)' }}>
+            <span style={{ color: sodiumColor==='orange'?'var(--warn)':sodiumColor==='yellow'?'var(--warn)':'var(--danger)' }}>
               {sodiumMg}mg / 2300mg
             </span>
           </div>
@@ -302,7 +302,7 @@ export default function AppPage() {
           </div>
           <div className="sodium-label">
             <span>健康区间: &lt;1800mg</span>
-            <span style={{ color: sodiumColor==='green'?'var(--success)':'var(--text2)' }}>{sodiumPercent}%</span>
+            <span style={{ color: sodiumColor==='orange'?'var(--warn)':'var(--text2)' }}>{sodiumPercent}%</span>
           </div>
         </div>
 

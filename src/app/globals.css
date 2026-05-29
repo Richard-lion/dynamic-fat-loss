@@ -352,7 +352,7 @@ body {
 .sodium-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 12px; }
 .sodium-bar     { height: 6px; background: var(--bg3); border-radius: var(--radius-pill); overflow: hidden; margin: 6px 0 4px; }
 .sodium-fill    { height: 100%; border-radius: var(--radius-pill); transition: width 0.5s ease; }
-.sodium-fill.green  { background: var(--success); }
+.sodium-fill.orange { background: var(--warn); }
 .sodium-fill.yellow { background: var(--warn); }
 .sodium-fill.red     { background: var(--danger); }
 .sodium-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); }

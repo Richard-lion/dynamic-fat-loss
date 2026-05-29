@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
 
     const sodiumMg = todayLog.totalSodium || 0;
     const sodiumPercent = Math.min((sodiumMg / 2300) * 100, 100);
-    const sodiumColor = sodiumMg < 1800 ? 'green' : sodiumMg < 2300 ? 'yellow' : 'red';
+    const sodiumColor = sodiumMg < 1800 ? 'orange' : sodiumMg < 2300 ? 'yellow' : 'red';
 
     return NextResponse.json({
       user: state.user, today,
