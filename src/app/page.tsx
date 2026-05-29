@@ -53,19 +53,21 @@ export default function OnboardingPage() {
       checkUser();
     } else {
       // No localStorage (private window) — try cookie session
-      const cookieRes = await fetch('/api/auth/session');
-      if (cookieRes.ok) {
-        const data = await cookieRes.json();
-        localStorage.setItem('fl_token', data.token);
-        const dashRes = await fetch('/api/dashboard', {
-          headers: { Authorization: `Bearer ${data.token}` },
-        });
-        if (dashRes.ok) { router.push('/app'); return; }
-        // Cookie valid, no onboarding → stay on this page
-        return;
-      }
-      // No cookie session — go to login
-      router.push('/login');
+      (async () => {
+        const cookieRes = await fetch('/api/auth/session');
+        if (cookieRes.ok) {
+          const data = await cookieRes.json();
+          localStorage.setItem('fl_token', data.token);
+          const dashRes = await fetch('/api/dashboard', {
+            headers: { Authorization: `Bearer ${data.token}` },
+          });
+          if (dashRes.ok) { router.push('/app'); return; }
+          // Cookie valid, no onboarding → stay on this page
+          return;
+        }
+        // No cookie session — go to login
+        router.push('/login');
+      })();
     }
   }, [router]);
 
