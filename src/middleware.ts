@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const protectedPaths = ['/', '/app', '/analytics'];
+  const protectedPaths = ['/', '/analytics'];
   const isProtected = protectedPaths.includes(pathname);
 
   // Accept token from cookie OR Authorization header
