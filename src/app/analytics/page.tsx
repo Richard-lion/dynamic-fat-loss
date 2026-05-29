@@ -103,8 +103,9 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="header">
           <div>
-            <h1>📈 数据分析</h1>
-            <div className="subtitle">追踪你的减脂进度</div>
+            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)', letterSpacing:-0.2px }}>
+            数据分析
+          </h1>
           </div>
         </div>
 
@@ -122,6 +123,7 @@ export default function AnalyticsPage() {
             <div className="s-label">总变化</div>
             <div className={`s-value ${lossClass}`}>
               {totalLossNum > 0 ? '-' : totalLossNum < 0 ? '+' : ''}{totalLossAbs}
+              <span style={{ fontSize:11, fontWeight:400, color:'var(--text2)' }}> kg</span>
             </div>
           </div>
         </div>
