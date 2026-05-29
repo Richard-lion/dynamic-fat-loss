@@ -103,6 +103,8 @@ export default function AppPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [customFood, setCustomFood] = useState({ name:'', weight:'', carbs:'', protein:'', fat:'', sodium:'' });
   const [settlementFeel, setSettlementFeel] = useState('');
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognitionResult, setRecognitionResult] = useState<any>(null);
 
   const load = useCallback(async () => {
     try {
@@ -384,6 +386,8 @@ export default function AppPage() {
                   setCustomFood({ name:'', weight:'', carbs:'', protein:'', fat:'', sodium:'' });
                   setFoodSearch('');
                   setShowCameraMode(false);
+                  setRecognitionResult(null);
+                  setRecognizing(false);
                 }}
                 style={{ background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:8, padding:'6px 12px', fontSize:12, cursor:'pointer', color:'var(--text)' }}
               >
@@ -417,7 +421,7 @@ export default function AppPage() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    showToast('正在AI识别食物...');
+                    setRecognizing(true);
                     try {
                       const formData = new FormData();
                       formData.append('image', file);
@@ -427,17 +431,10 @@ export default function AppPage() {
                       });
                       const json = await res.json();
                       if (!res.ok) throw new Error(json.error || '识别失败');
-                      showToast(`识别到: ${json.name} ${json.weight}g`);
-                      setCustomFood({
-                        name: String(json.name),
-                        weight: String(json.weight),
-                        carbs: String(json.carbs),
-                        protein: String(json.protein),
-                        fat: String(json.fat),
-                        sodium: String(json.sodium),
-                      });
-                      setShowCameraMode(false);
+                      setRecognitionResult(json);
+                      setRecognizing(false);
                     } catch (err: any) {
+                      setRecognizing(false);
                       showToast(err.message || '识别失败，请重试');
                     }
                   }}
@@ -453,8 +450,74 @@ export default function AppPage() {
               </div>
             )}
 
+            {/* Recogniton loading */}
+            {recognizing && (
+              <div style={{ textAlign:'center', padding:'32px 0' }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
+                <div style={{ fontSize:15, fontWeight:600, color:'var(--text)', marginBottom:6 }}>AI 正在识别中...</div>
+                <div style={{ fontSize:12, color:'var(--text2)' }}>请稍等，结果会显示在下方</div>
+              </div>
+            )}
+
+            {/* Recognition confirm page */}
+            {!recognizing && recognitionResult && (
+              <div style={{ background:'var(--bg2)', border:'1.5px solid var(--coral)', borderRadius:12, padding:'16px', marginBottom:14 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--coral)', marginBottom:10 }}>✓ AI 识别结果 — 请确认以下信息</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {[
+                    { key:'name',   label:'食物名称', type:'text', value: recognitionResult.name },
+                    { key:'weight', label:'重量 (g)', type:'number', value: String(recognitionResult.weight) },
+                    { key:'carbs',  label:'碳水 (g)', type:'number', value: String(recognitionResult.carbs) },
+                    { key:'protein',label:'蛋白 (g)', type:'number', value: String(recognitionResult.protein) },
+                    { key:'fat',    label:'脂肪 (g)', type:'number', value: String(recognitionResult.fat) },
+                    { key:'sodium', label:'钠 (mg)',  type:'number', value: String(recognitionResult.sodium) },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label style={{ fontSize:11, color:'var(--text2)', marginBottom:3, display:'block' }}>{f.label}</label>
+                      <input
+                        type={f.type}
+                        value={f.value}
+                        onChange={e => setRecognitionResult({ ...recognitionResult, [f.key]: f.type === 'number' ? parseFloat(e.target.value)||0 : e.target.value })}
+                        style={{ width:'100%', padding:'8px 10px', fontSize:13, background:'var(--bg3)', border:'1.5px solid var(--border)', borderRadius:'var(--radius)', color:'var(--text)', outline:'none' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize:11, color:'var(--text3)', marginTop:6, marginBottom:12 }}>
+                  热量估算：{(recognitionResult.carbs||0)*4 + (recognitionResult.protein||0)*4 + (recognitionResult.fat||0)*9} kcal
+                  {recognitionResult.confidence && <span style={{ marginLeft:8, color:recognitionResult.confidence==='high'?'var(--success)':recognitionResult.confidence==='medium'?'var(--warn)':'var(--error)' }}>· 置信度：{recognitionResult.confidence}</span>}
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button
+                    className="btn-primary"
+                    style={{ flex:1, fontSize:13 }}
+                    onClick={() => {
+                      setCustomFood({
+                        name: String(recognitionResult.name),
+                        weight: String(recognitionResult.weight),
+                        carbs: String(recognitionResult.carbs),
+                        protein: String(recognitionResult.protein),
+                        fat: String(recognitionResult.fat),
+                        sodium: String(recognitionResult.sodium),
+                      });
+                      setRecognitionResult(null);
+                      setShowCameraMode(false);
+                    }}
+                  >
+                    确认 — 填入表单
+                  </button>
+                  <button
+                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:13, cursor:'pointer', color:'var(--text2)' }}
+                    onClick={() => setRecognitionResult(null)}
+                  >
+                    重拍
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Favorites */}
-            {data.favorites?.length > 0 && !showCameraMode && (
+            {data.favorites?.length > 0 && !showCameraMode && !recognitionResult && !recognizing && (
               <div style={{ marginBottom:12 }}>
                 <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>⭐ 我的收藏</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:140, overflowY:'auto' }}>
