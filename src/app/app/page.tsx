@@ -462,7 +462,7 @@ export default function AppPage() {
             {/* Recognition confirm page */}
             {!recognizing && recognitionResult && (
               <div style={{ background:'var(--bg2)', border:'1.5px solid var(--coral)', borderRadius:12, padding:'16px', marginBottom:14 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:'var(--coral)', marginBottom:10 }}>✓ AI 识别结果 — 请确认以下信息</div>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--coral)', marginBottom:10 }}>✓ AI 识别结果 v2 — 请确认以下信息</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                   {[
                     { key:'name',   label:'食物名称', type:'text', value: recognitionResult.name },
