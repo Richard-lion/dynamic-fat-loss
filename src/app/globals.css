@@ -396,7 +396,7 @@ body {
 
 /* ── Onboarding Hero ── */
 .onboarding-hero { text-align: center; padding: 36px 0 28px; }
-.onboarding-hero .icon { font-size: 52px; margin-bottom: 12px; }
+.onboarding-hero .icon { width: 52px; height: 52px; margin-bottom: 12px; line-height: 0; display: flex; align-items: center; justify-content: center; }
 .onboarding-hero h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 8px; }
 .onboarding-hero p  { color: var(--text2); font-size: 13px; line-height: 1.55; }
 
