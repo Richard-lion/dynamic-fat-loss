@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Scales, Target, Lightbulb, Drop, Notepad, ForkKnife, Camera,
+  SunHorizon, Sun, Moon, Cookie, ChartBar, ChartLineDown,
+  MagnifyingGlass, Star, Books,
+} from '@phosphor-icons/react';
 
 function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem('fl_token');
@@ -188,7 +193,7 @@ export default function AppPage() {
             unit: food.unit || 'g', per: food.per || food.weight,
           }),
         });
-        showToast(`已收藏 ⭐`);
+        showToast(`已收藏 ✓`);
       }
       load();
     } catch (e: any) { showToast(e.message); }
@@ -213,7 +218,7 @@ export default function AppPage() {
 
   const meals = ['breakfast','lunch','dinner','snack'] as const;
   const mealLabels: Record<string,string> = { breakfast:'早餐', lunch:'午餐', dinner:'晚餐', snack:'点心' };
-  const mealIcons: Record<string,string>  = { breakfast:'🌅', lunch:'☀️', dinner:'🌙', snack:'🍎' };
+  const mealIcons: Record<string,React.ReactNode> = { breakfast:<SunHorizon size={16} />, lunch:<Sun size={16} />, dinner:<Moon size={16} />, snack:<Cookie size={16} /> };
 
   if (loading) return (
     <div className="loading-screen">
@@ -249,7 +254,7 @@ export default function AppPage() {
         {/* Header */}
         <div className="header">
           <div>
-            <h1>⚖️ 动态减脂</h1>
+            <h1><Scales size={20} /> 动态减脂</h1>
             <div className="subtitle">第 {cycleNumber} 个 10 天周期</div>
           </div>
           <button
@@ -270,7 +275,7 @@ export default function AppPage() {
 
         {/* Cycle Banner */}
         <div className="cycle-banner">
-          <div style={{ fontSize:26 }}>🎯</div>
+          <div style={{ fontSize:26 }}><Target size={26} /></div>
           <div className="cb-text">
             <div className="cb-title">第 {dayOfCycle} 天 / 共 10 天</div>
             <div className="cb-sub">距离下次动态调整还有 {daysLeftInCycle} 天</div>
@@ -280,7 +285,7 @@ export default function AppPage() {
 
         {/* Tip */}
         <div className="tip-box">
-          💡 体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！
+          <Lightbulb size={16} /> 体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！
         </div>
 
         {/* Macro Rings */}
@@ -294,7 +299,7 @@ export default function AppPage() {
         {/* Sodium */}
         <div className="sodium-section">
           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
-            <span>🧂 钠摄入</span>
+            <span><Drop size={14} /> 钠摄入</span>
             <span style={{ color: sodiumColor==='orange'?'var(--warn)':sodiumColor==='yellow'?'var(--warn)':'var(--danger)' }}>
               {sodiumMg}mg / 2300mg
             </span>
@@ -310,7 +315,7 @@ export default function AppPage() {
 
         {/* Weight */}
         <div className="card">
-          <div style={{ fontSize:13, fontWeight:600, marginBottom:10 }}>📝 今日体重</div>
+          <div style={{ fontSize:13, fontWeight:600, marginBottom:10 }}><Notepad size={14} /> 今日体重</div>
           {todayWeight && (
             <div style={{ fontSize:12, color:'var(--text2)', marginBottom:8 }}>已记录：{todayWeight} kg</div>
           )}
@@ -365,10 +370,10 @@ export default function AppPage() {
       {/* Bottom Nav */}
       <div className="nav-bar">
         <a href="/app" className="nav-item active">
-          <span className="nav-icon">📊</span>追踪
+          <span className="nav-icon"><ChartBar size={16} /></span>追踪
         </a>
         <a href="/analytics" className="nav-item">
-          <span className="nav-icon">📈</span>分析
+          <span className="nav-icon"><ChartLineDown size={16} /></span>分析
         </a>
       </div>
 
@@ -380,7 +385,7 @@ export default function AppPage() {
         <div className="modal-overlay" onClick={() => setShowAddFood(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight:'90vh', overflowY:'auto' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-              <h2>🍽️ 添加食物 — {mealLabels[selectedMeal]}</h2>
+              <h2><ForkKnife size={16} /> 添加食物 — {mealLabels[selectedMeal]}</h2>
               <button
                 onClick={() => {
                   setCustomFood({ name:'', weight:'', carbs:'', protein:'', fat:'', sodium:'' });
@@ -401,7 +406,7 @@ export default function AppPage() {
                 onClick={() => setShowCameraMode(true)}
                 style={{ background: showCameraMode ? 'var(--accent)' : 'var(--bg3)', color: showCameraMode ? '#fff' : 'var(--text)', border:'1.5px solid var(--border)', borderRadius:9, padding:'9px 14px', fontSize:13, cursor:'pointer', flexShrink:0 }}
               >
-                📷 AI识别
+                <Camera size={16} /> AI识别
               </button>
               <input
                 type="text" placeholder="搜索食物..."
@@ -444,7 +449,7 @@ export default function AppPage() {
                   onClick={() => cameraInputRef.current?.click()}
                   style={{ background:'var(--bg3)', border:'2px dashed var(--border)', borderRadius:12, padding:'28px', textAlign:'center', cursor:'pointer', color:'var(--text2)', fontSize:13 }}
                 >
-                  <div style={{ fontSize:28, marginBottom:6 }}>📷</div>
+                  <div style={{ fontSize:28, marginBottom:6 }}><Camera size={28} /></div>
                   点击拍照或从相册选择
                 </div>
               </div>
@@ -453,7 +458,7 @@ export default function AppPage() {
             {/* Recogniton loading */}
             {recognizing && (
               <div style={{ textAlign:'center', padding:'32px 0' }}>
-                <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
+                <div style={{ fontSize:32, marginBottom:12 }}><MagnifyingGlass size={32} /></div>
                 <div style={{ fontSize:15, fontWeight:600, color:'var(--text)', marginBottom:6 }}>AI 正在识别中...</div>
                 <div style={{ fontSize:12, color:'var(--text2)' }}>请稍等，结果会显示在下方</div>
               </div>
@@ -528,7 +533,7 @@ export default function AppPage() {
             {/* Favorites */}
             {data.favorites?.length > 0 && !showCameraMode && !recognitionResult && !recognizing && (
               <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>⭐ 我的收藏</div>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}><Star size={12} weight="fill" /> 我的收藏</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:140, overflowY:'auto' }}>
                   {data.favorites.map((fav: any) => (
                     <div key={fav.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'var(--bg3)', borderRadius:9, border:'1px solid var(--border)' }}>
@@ -540,7 +545,7 @@ export default function AppPage() {
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(fav); }}
                         style={{ background:'none', border:'none', cursor:'pointer', fontSize:14, padding:'2px 4px', color:'var(--accent)' }}
                       >
-                        ⭐
+                        <Star size={14} weight="fill" />
                       </button>
                     </div>
                   ))}
@@ -552,7 +557,7 @@ export default function AppPage() {
             {!showCameraMode && (
               <div style={{ marginBottom:14 }}>
                 <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
-                  📚 食物库 {foodSearch && `— 搜索"${foodSearch}"`}
+                  <Books size={12} /> 食物库 {foodSearch && `— 搜索"${foodSearch}"`}
                 </div>
                 <div style={{ maxHeight:160, overflowY:'auto' }}>
                   {data.foodDatabase
@@ -570,7 +575,7 @@ export default function AppPage() {
                             onClick={(e) => { e.stopPropagation(); toggleFavorite(f); }}
                             style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:'2px 6px', color: isFav ? 'var(--accent)' : 'var(--text3)' }}
                           >
-                            {isFav ? '⭐' : '☆'}
+                            {isFav ? <Star size={15} weight="fill" /> : <Star size={15} />}
                           </button>
                         </div>
                       );
@@ -581,7 +586,7 @@ export default function AppPage() {
 
             {/* Custom food */}
             <div style={{ borderTop:'1px solid var(--border)', paddingTop:14 }}>
-              <h3 style={{ fontSize:14, marginBottom:10, fontWeight:600 }}>📝 自定义食物</h3>
+              <h3 style={{ fontSize:14, marginBottom:10, fontWeight:600 }}><Notepad size={14} /> 自定义食物</h3>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                 {[
                   { key:'name',    label:'食物名称', placeholder:'例如：自制三明治', type:'text' },
@@ -633,7 +638,7 @@ export default function AppPage() {
                       per: foodData.per,
                     }),
                   }).then(r => r.json()).then(j => {
-                    if (j.success) { showToast(`已添加 ${foodData.name} 并收藏 ⭐`); load(); }
+                    if (j.success) { showToast(`已添加 ${foodData.name} 并收藏 ✓`); load(); }
                     else showToast(`已添加 ${foodData.name}`);
                   }).catch(() => showToast(`已添加 ${foodData.name}`));
                 }}
@@ -651,7 +656,7 @@ export default function AppPage() {
       {showSettlement && (
         <div className="modal-overlay">
           <div className="modal">
-            <h2>🎯 第 {cycleNumber} 期 10 天结算</h2>
+            <h2><Target size={16} /> 第 {cycleNumber} 期 10 天结算</h2>
             <p style={{ fontSize:13, color:'var(--text2)', lineHeight:1.6, marginTop:4 }}>
               10 天周期已完成！请根据你的实际感受选择，系统将自动调整下一周期的营养目标。
             </p>

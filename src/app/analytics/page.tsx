@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChartBar, ChartLineDown, ChartLine } from '@phosphor-icons/react';
 
 function apiFetch(path: string, opts?: RequestInit) {
   const token = localStorage.getItem('fl_token');
@@ -58,7 +59,7 @@ export default function AnalyticsPage() {
     if (!weightData || weightData.length < 2) {
       return (
         <div style={{ height:150, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
-          <div style={{ fontSize:40 }}>📊</div>
+          <div style={{ fontSize:40 }}><ChartBar size={40} /></div>
           <div style={{ fontSize:13, color:'var(--text2)' }}>至少需要 2 天体重数据</div>
           <div style={{ fontSize:11, color:'var(--text3)' }}>持续记录后就会显示趋势图</div>
         </div>
@@ -103,7 +104,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="header">
           <div>
-            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)', letterSpacing:-0.2px }}>
+            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)' }}>
             数据分析
           </h1>
           </div>
@@ -204,10 +205,10 @@ export default function AnalyticsPage() {
       {/* Bottom Nav */}
       <div className="nav-bar">
         <a href="/app"      className="nav-item">
-          <span className="nav-icon">📊</span>追踪
+          <span className="nav-icon"><ChartBar size={16} /></span>追踪
         </a>
         <a href="/analytics" className="nav-item active">
-          <span className="nav-icon">📈</span>分析
+          <span className="nav-icon"><ChartLineDown size={16} /></span>分析
         </a>
       </div>
 
