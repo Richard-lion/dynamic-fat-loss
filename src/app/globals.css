@@ -348,7 +348,7 @@ body {
   transition: color 0.15s;
 }
 .nav-item.active { color: var(--accent); }
-.nav-item .nav-icon { font-size: 22px; }
+.nav-item .nav-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
 
 /* ── Sodium bar ── */
 .sodium-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 12px; }
@@ -420,7 +420,8 @@ body {
   background: var(--accent-light);
   color: var(--accent-dark);
 }
-.gender-btn .g-icon { font-size: 26px; display: block; margin-bottom: 4px; }
+.gender-btn .g-icon { display: block; margin-bottom: 6px; line-height: 0; }
+.gender-btn.active .g-icon { opacity: 1; }
 
 /* ── Workout Options ── */
 .workout-options { display: flex; flex-direction: column; gap: 8px; }

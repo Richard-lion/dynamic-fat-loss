@@ -137,7 +137,7 @@ export default function OnboardingPage() {
     <div className="container">
       {/* Hero */}
       <div className="onboarding-hero">
-        <div style={{ fontSize: 52, marginBottom: 10 }}><Scales size={52} /></div>
+        <div className="icon"><Scales size={52} /></div>
         <h1>动态减脂拉锯战</h1>
         <p>告别固定热量的瓶颈<br />用 10 天周期科学调整营养目标</p>
       </div>
