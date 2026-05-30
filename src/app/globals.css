@@ -115,6 +115,7 @@ body {
 .btn-primary:hover  { background: var(--accent-dark); box-shadow: 0 4px 14px rgba(232,98,58,0.3); }
 .btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn-primary svg { flex-shrink: 0; }
 
 .btn-secondary {
   background: var(--bg3);
@@ -302,6 +303,9 @@ body {
   color: var(--accent-dark);
   line-height: 1.6;
   margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
 }
 
 /* ── Cycle Banner ── */

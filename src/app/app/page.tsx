@@ -285,7 +285,8 @@ export default function AppPage() {
 
         {/* Tip */}
         <div className="tip-box">
-          <Lightbulb size={16} /> 体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！
+          <Lightbulb size={16} />
+          <span>体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！</span>
         </div>
 
         {/* Macro Rings */}
