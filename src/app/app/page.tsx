@@ -300,7 +300,7 @@ export default function AppPage() {
         {/* Sodium */}
         <div className="sodium-section">
           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
-            <span><Drop size={14} /> 钠摄入</span>
+            <span style={{ display:'flex', alignItems:'center', gap:4 }}><Drop size={14} /> 钠摄入</span>
             <span style={{ color: sodiumColor==='orange'?'var(--warn)':sodiumColor==='yellow'?'var(--warn)':'var(--danger)' }}>
               {sodiumMg}mg / 2300mg
             </span>
@@ -316,7 +316,7 @@ export default function AppPage() {
 
         {/* Weight */}
         <div className="card">
-          <div style={{ fontSize:13, fontWeight:600, marginBottom:10 }}><Notepad size={14} /> 今日体重</div>
+          <div style={{ fontSize:13, fontWeight:600, marginBottom:10, display:'flex', alignItems:'center', gap:5 }}><Notepad size={14} /> 今日体重</div>
           {todayWeight && (
             <div style={{ fontSize:12, color:'var(--text2)', marginBottom:8 }}>已记录：{todayWeight} kg</div>
           )}
@@ -534,7 +534,7 @@ export default function AppPage() {
             {/* Favorites */}
             {data.favorites?.length > 0 && !showCameraMode && !recognitionResult && !recognizing && (
               <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}><Star size={12} weight="fill" /> 我的收藏</div>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600, display:'flex', alignItems:'center', gap:4 }}><Star size={12} weight="fill" /> 我的收藏</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:140, overflowY:'auto' }}>
                   {data.favorites.map((fav: any) => (
                     <div key={fav.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'var(--bg3)', borderRadius:9, border:'1px solid var(--border)' }}>
@@ -557,7 +557,7 @@ export default function AppPage() {
             {/* Search results */}
             {!showCameraMode && (
               <div style={{ marginBottom:14 }}>
-                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600, display:'flex', alignItems:'center', gap:4 }}>
                   <Books size={12} /> 食物库 {foodSearch && `— 搜索"${foodSearch}"`}
                 </div>
                 <div style={{ maxHeight:160, overflowY:'auto' }}>
