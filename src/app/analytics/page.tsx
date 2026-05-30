@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="header">
           <div>
-            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)' }}>
+            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)', letterSpacing:'-0.2px' }}>
             数据分析
           </h1>
           </div>
