@@ -275,7 +275,7 @@ export default function AppPage() {
 
         {/* Cycle Banner */}
         <div className="cycle-banner">
-          <div style={{ fontSize:26 }}><Target size={26} /></div>
+          <div className="cb-icon"><Target size={26} /></div>
           <div className="cb-text">
             <div className="cb-title">第 {dayOfCycle} 天 / 共 10 天</div>
             <div className="cb-sub">距离下次动态调整还有 {daysLeftInCycle} 天</div>
