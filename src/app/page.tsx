@@ -226,7 +226,7 @@ export default function OnboardingPage() {
       )}
 
       <button className="btn-primary" onClick={handleNext} disabled={!canProceed() || loading}>
-        {loading ? '建立中...' : step < 3 ? '下一步 →' : <><Rocket size={16} /> 开始减脂计划</>}
+        {loading ? '建立中...' : step < 3 ? '下一步 →' : <><Rocket size={16} style={{display:'inline-block',verticalAlign:'middle',marginRight:5}} />开始减脂计划</>}
       </button>
 
       {step > 1 && (
