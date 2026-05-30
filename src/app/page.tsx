@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Scales, Rocket, GenderFemale, GenderMale } from '@phosphor-icons/react';
 
 const WORKOUT_LEVELS = [
   { value: '2-3', label: '每周 2 次', sub: '约 2-3 小时/周' },
@@ -136,7 +137,7 @@ export default function OnboardingPage() {
     <div className="container">
       {/* Hero */}
       <div className="onboarding-hero">
-        <div style={{ fontSize: 52, marginBottom: 10 }}>⚖️</div>
+        <div style={{ fontSize: 52, marginBottom: 10 }}><Scales size={52} /></div>
         <h1>动态减脂拉锯战</h1>
         <p>告别固定热量的瓶颈<br />用 10 天周期科学调整营养目标</p>
       </div>
@@ -156,11 +157,11 @@ export default function OnboardingPage() {
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>你的性别是？</h3>
           <div className="gender-toggle">
             <div className={`gender-btn ${gender === 'male' ? 'active' : ''}`} onClick={() => setGender('male')}>
-              <span className="g-icon">♂</span>
+              <span className="g-icon"><GenderMale size={26} /></span>
               男性
             </div>
             <div className={`gender-btn ${gender === 'female' ? 'active' : ''}`} onClick={() => setGender('female')}>
-              <span className="g-icon">♀</span>
+              <span className="g-icon"><GenderFemale size={26} /></span>
               女性
             </div>
           </div>
@@ -225,7 +226,7 @@ export default function OnboardingPage() {
       )}
 
       <button className="btn-primary" onClick={handleNext} disabled={!canProceed() || loading}>
-        {loading ? '建立中...' : step < 3 ? '下一步 →' : '开始减脂计划 🚀'}
+        {loading ? '建立中...' : step < 3 ? '下一步 →' : <><Rocket size={16} /> 开始减脂计划</>}
       </button>
 
       {step > 1 && (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Scales } from '@phosphor-icons/react';
 
 const API = '/api/auth';
 
@@ -79,7 +80,7 @@ export default function LoginPage() {
     <div className="container" style={{ maxWidth: 420, margin: '0 auto', paddingTop: 60 }}>
       {/* Hero */}
       <div className="onboarding-hero">
-        <div style={{ fontSize: 52, marginBottom: 10 }}>⚖️</div>
+        <div style={{ fontSize: 52, marginBottom: 10 }}><Scales size={52} /></div>
         <h1 style={{ fontSize: 26 }}>动态减脂拉锯战</h1>
         <p>登录你的账户<br />开始科学减脂之旅</p>
       </div>
