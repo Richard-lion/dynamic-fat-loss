@@ -157,11 +157,11 @@ export default function OnboardingPage() {
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>你的性别是？</h3>
           <div className="gender-toggle">
             <div className={`gender-btn ${gender === 'male' ? 'active' : ''}`} onClick={() => setGender('male')}>
-              <span className="g-icon"><GenderMale size={26} /></span>
+              <span className="g-icon"><GenderMale size={22} /></span>
               男性
             </div>
             <div className={`gender-btn ${gender === 'female' ? 'active' : ''}`} onClick={() => setGender('female')}>
-              <span className="g-icon"><GenderFemale size={26} /></span>
+              <span className="g-icon"><GenderFemale size={22} /></span>
               女性
             </div>
           </div>
