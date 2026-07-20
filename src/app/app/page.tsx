@@ -335,27 +335,31 @@ export default function AppPage() {
 
   return (
     <>
-      <div className="container">
-        {/* Header */}
-        <div className="header">
-          <div>
-            <h1><Scales size={20} /> 动态减脂</h1>
-            <div className="subtitle">第 {cycleNumber} 个 10 天周期</div>
+      {/* Top Nav Bar */}
+      <div className="nav-bar">
+        <div className="nav-inner">
+          <a href="/app" className="nav-brand">
+            <Scales size={20} /> 动态减脂
+          </a>
+          <div className="nav-links">
+            <a href="/app" className="nav-link active">📊 追踪</a>
+            <a href="/analytics" className="nav-link">📈 分析</a>
           </div>
-          <button
-            onClick={logout}
-            style={{
-              background: 'var(--bg3)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              color: 'var(--text2)',
-              fontSize: 12,
-              padding: '6px 12px',
-              cursor: 'pointer',
-            }}
-          >
-            登出
-          </button>
+          <div className="nav-actions">
+            <button onClick={logout} className="btn-ghost" style={{fontSize:12}}>登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container">
+        {/* Cycle Banner */}
+        <div className="cycle-banner">
+          <div className="cb-icon"><Target size={22} color="var(--accent)" /></div>
+          <div className="cb-text">
+            <div className="cb-title">第 {dayOfCycle} 天 / 共 10 天</div>
+            <div className="cb-sub">距离下次动态调整还有 {daysLeftInCycle} 天 · 总共 {totalDays} 天计划</div>
+          </div>
+          <div className="cb-days">{daysLeftInCycle}</div>
         </div>
 
         {/* Cycle Banner */}
@@ -370,23 +374,28 @@ export default function AppPage() {
 
         {/* Tip */}
         <div className="tip-box">
-          <Lightbulb size={16} />
+          <Lightbulb size={16} color="var(--orange)" />
           <span>体重波动多为水分滞留，请专注 7 天移动均线的下滑趋势！</span>
+        </div>
+
+        {/* Progress */}
+        <div className="progress-bar" style={{marginBottom:14}}>
+          <div className="fill" style={{width:`${Math.min(100, (dayIndex/totalDays)*100)}%`}} />
         </div>
 
         {/* Macro Rings */}
         <div className="ring-grid">
-          <ProgressRing value={todayLog.calories}     max={targets.calories||2000} label="热量" unit="kcal" color={kcalPct>100 ? 'var(--danger)' : 'var(--accent)'} size={110} />
-          <ProgressRing value={todayLog.totalCarbs}   max={targets.carbs||150}     label="碳水" unit="g"   color={carbsPct>100  ? 'var(--warn)' : '#3a9e6e'} size={72} />
-          <ProgressRing value={todayLog.totalProtein}  max={targets.protein||100}   label="蛋白" unit="g"   color="var(--accent)" size={72} />
-          <ProgressRing value={todayLog.totalFat}      max={targets.fat||60}         label="脂肪" unit="g"   color={fatPct>100 ? 'var(--warn)' : '#d4880a'} size={72} />
+          <ProgressRing value={todayLog.calories}     max={targets.calories||2000} label="热量" unit="kcal" color={kcalPct>100 ? 'var(--ring-calorie)' : 'var(--ring-calorie)'} size={110} />
+          <ProgressRing value={todayLog.totalCarbs}   max={targets.carbs||150}     label="碳水" unit="g"   color='var(--ring-carb)' size={72} />
+          <ProgressRing value={todayLog.totalProtein}  max={targets.protein||100}   label="蛋白" unit="g"   color='var(--ring-protein)' size={72} />
+          <ProgressRing value={todayLog.totalFat}      max={targets.fat||60}         label="脂肪" unit="g"   color='var(--ring-fat)' size={72} />
         </div>
 
         {/* Sodium */}
         <div className="sodium-section">
           <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
             <span style={{ display:'flex', alignItems:'center', gap:4 }}><Drop size={14} /> 钠摄入</span>
-            <span style={{ color: sodiumColor==='orange'?'var(--warn)':sodiumColor==='yellow'?'var(--warn)':'var(--danger)' }}>
+            <span style={{ color: sodiumColor==='green'?'var(--success)':sodiumColor==='orange'?'var(--orange)':'var(--danger)' }}>
               {sodiumMg}mg / 2300mg
             </span>
           </div>
@@ -399,27 +408,46 @@ export default function AppPage() {
           </div>
         </div>
 
-        {/* Weight */}
-        <div className="card">
-          <div style={{ fontSize:13, fontWeight:600, marginBottom:10, display:'flex', alignItems:'center', gap:5 }}><Notepad size={14} /> 今日体重</div>
-          {todayWeight && (
-            <div style={{ fontSize:12, color:'var(--text2)', marginBottom:8 }}>已记录：{todayWeight} kg</div>
-          )}
-          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-            <input
-              type="number" step="0.1" placeholder="68.5"
-              value={weightInput}
-              onChange={e => setWeightInput(e.target.value)}
-              style={{ flex:1, fontSize:24, fontWeight:700, textAlign:'center', padding:'12px', background:'var(--bg3)', border:'1.5px solid var(--border)', borderRadius:'var(--radius)', color:'var(--text)', outline:'none', minWidth:0 }}
-            />
-            <button onClick={saveWeight} style={{ background:'var(--accent)', color:'#fff', border:'none', borderRadius:'var(--radius)', padding:'12px 18px', fontSize:13, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', boxShadow:'0 2px 8px rgba(232,98,58,0.25)' }}>
-              记录
-            </button>
-          </div>
+        {/* Weight — modern input */}
+        <div className="weight-section">
+          <Notepad size={18} color="var(--accent)" />
+          <input
+            type="number" step="0.1" placeholder={todayWeight ? `${todayWeight} kg` : "体重 kg"}
+            value={weightInput}
+            onChange={e => setWeightInput(e.target.value)}
+          />
+          <button className="btn-record" onClick={saveWeight}>记录</button>
         </div>
 
-        {/* Meals */}
-        <div style={{ marginTop:4 }}>
+        {/* Meals — grid on desktop, stack on mobile */}
+        <div className="section-header">
+          <h3>🍽️ 餐食记录</h3>
+        </div>
+        <div className="meal-grid">
+          {meals.map(meal => {
+            const foods = todayLog.foods.filter((f:FoodEntry) => f.meal === meal);
+            const mealCarbs = foods.reduce((s:number,f:FoodEntry) => s+f.carbs, 0);
+            const mealCal   = foods.reduce((s:number,f:FoodEntry) => s+f.calories, 0);
+            return (
+              <div key={meal} className="meal-card"
+                onClick={() => { setSelectedMeal(meal); setShowAddFood(true); }}
+              >
+                <div className="meal-icon">
+                  {mealIcons[meal]}
+                  <span>{mealLabels[meal]}</span>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  {foods.length > 0 && <span className="meal-count">{foods.length}</span>}
+                  <button className="meal-btn" onClick={(e) => { e.stopPropagation(); setSelectedMeal(meal); setShowAddFood(true); }}>+</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Expanded meal items (if any food logged) */}
+        {meals.filter(meal => todayLog.foods.filter((f:FoodEntry) => f.meal === meal).length > 0).length > 0 && (
+          <div style={{ marginTop: 4, marginBottom: 14 }}>
           {meals.map(meal => {
             const foods = todayLog.foods.filter((f:FoodEntry) => f.meal === meal);
             const mealCarbs = foods.reduce((s:number,f:FoodEntry) => s+f.carbs, 0);
@@ -450,16 +478,17 @@ export default function AppPage() {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Nav */}
-      <div className="nav-bar">
-        <a href="/app" className="nav-item active">
-          <span className="nav-icon"><ChartBar size={16} /></span>追踪
+      {/* Bottom Nav — mobile only */}
+      <div className="bottom-nav">
+        <a href="/app" className="bottom-nav-item active">
+          <ChartBar size={18} />追踪
         </a>
-        <a href="/analytics" className="nav-item">
-          <span className="nav-icon"><ChartLineDown size={16} /></span>分析
+        <a href="/analytics" className="bottom-nav-item">
+          <ChartLineDown size={18} />分析
         </a>
       </div>
 

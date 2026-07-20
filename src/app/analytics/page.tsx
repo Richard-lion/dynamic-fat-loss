@@ -198,9 +198,9 @@ export default function AnalyticsPage() {
           const x = pad + i * bandW;
           return (
             <g key={i}>
-              <rect x={x+1} y={pad}                       width={bandW-2} height={carbH} fill="#3a9e6e" opacity="0.9" />
-              <rect x={x+1} y={pad+carbH}                 width={bandW-2} height={protH} fill="var(--accent)" opacity="0.9" />
-              <rect x={x+1} y={pad+carbH+protH}           width={bandW-2} height={fatH}  fill="#d4880a" opacity="0.9" />
+              <rect x={x+1} y={pad}                       width={bandW-2} height={carbH} fill="var(--ring-carb)" opacity="0.9" />
+              <rect x={x+1} y={pad+carbH}                 width={bandW-2} height={protH} fill="var(--ring-protein)" opacity="0.9" />
+              <rect x={x+1} y={pad+carbH+protH}           width={bandW-2} height={fatH}  fill="var(--ring-fat)" opacity="0.9" />
             </g>
           );
         })}
@@ -212,25 +212,31 @@ export default function AnalyticsPage() {
 
   return (
     <>
-      <div className="container">
-        {/* Header */}
-        <div className="header">
-          <div>
-            <h1 style={{ fontSize:18, fontWeight:700, color:'var(--text)', letterSpacing:'-0.2px' }}>
-              数据分析
-            </h1>
-            <div className="subtitle">{daysLogged} 天记录</div>
+      {/* Top Nav Bar */}
+      <div className="nav-bar">
+        <div className="nav-inner">
+          <a href="/app" className="nav-brand">
+            📊 动态减脂
+          </a>
+          <div className="nav-links">
+            <a href="/app" className="nav-link">📊 追踪</a>
+            <a href="/analytics" className="nav-link active">📈 分析</a>
           </div>
-          <button
-            onClick={exportCSV}
-            style={{
-              background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:'var(--radius)',
-              color:'var(--text2)', fontSize:12, padding:'6px 12px', cursor:'pointer',
-              display:'flex', alignItems:'center', gap:4,
-            }}
-          >
-            <DownloadSimple size={14} /> 导出 CSV
-          </button>
+          <div className="nav-actions">
+            <button onClick={exportCSV} className="btn-secondary" style={{fontSize:12, padding:'6px 12px'}}>
+              <DownloadSimple size={14} /> 导出 CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="container">
+        {/* Title */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+          <div>
+            <h2 style={{fontSize:20,fontWeight:700,color:'var(--text)'}}>数据分析</h2>
+            <div style={{fontSize:13,color:'var(--text2)',marginTop:2}}>{daysLogged} 天记录</div>
+          </div>
         </div>
 
         {/* Stats Row */}
@@ -274,7 +280,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Chart mode switcher */}
-        <div style={{ display:'flex', gap:6, marginTop:14, marginBottom:10 }}>
+        <div className="chart-tabs">
           {([
             { key:'weight',   label:'体重趋势' },
             { key:'calories', label:'热量 vs 目标' },
@@ -283,13 +289,7 @@ export default function AnalyticsPage() {
             <button
               key={m.key}
               onClick={() => setChartMode(m.key)}
-              style={{
-                flex:1, padding:'8px 0', fontSize:12, fontWeight: chartMode===m.key ? 600 : 400,
-                background: chartMode===m.key ? 'rgba(232,98,58,0.12)' : 'var(--bg3)',
-                color: chartMode===m.key ? 'var(--accent)' : 'var(--text2)',
-                border: chartMode===m.key ? '1.5px solid var(--accent)' : '1px solid var(--border)',
-                borderRadius:'var(--radius)', cursor:'pointer',
-              }}
+              className={`chart-tab${chartMode===m.key ? ' active' : ''}`}
             >
               {m.label}
             </button>
@@ -340,15 +340,15 @@ export default function AnalyticsPage() {
                 <h3 style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>每日宏观结构 (近 14 天)</h3>
                 <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--text2)' }}>
                   <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    <div style={{ width:10, height:10, background:'#3a9e6e', borderRadius:2 }} />
+                    <div style={{ width:10, height:10, background:'var(--ring-carb)', borderRadius:2 }} />
                     碳水
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    <div style={{ width:10, height:10, background:'var(--accent)', borderRadius:2 }} />
+                    <div style={{ width:10, height:10, background:'var(--ring-protein)', borderRadius:2 }} />
                     蛋白
                   </div>
                   <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    <div style={{ width:10, height:10, background:'#d4880a', borderRadius:2 }} />
+                    <div style={{ width:10, height:10, background:'var(--ring-fat)', borderRadius:2 }} />
                     脂肪
                   </div>
                 </div>
@@ -363,9 +363,9 @@ export default function AnalyticsPage() {
           <h3 style={{ fontSize:14, fontWeight:600, color:'var(--text)', marginBottom:14 }}>近 7 天平均摄入</h3>
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {[
-              { label:'碳水', value: macroPercentages?.carbs   || 0, color:'#3a9e6e' },
-              { label:'蛋白', value: macroPercentages?.protein || 0, color:'var(--accent)' },
-              { label:'脂肪', value: macroPercentages?.fat     || 0, color:'#d4880a' },
+              { label:'碳水', value: macroPercentages?.carbs   || 0, color:'var(--ring-carb)' },
+              { label:'蛋白', value: macroPercentages?.protein || 0, color:'var(--ring-protein)' },
+              { label:'脂肪', value: macroPercentages?.fat     || 0, color:'var(--ring-fat)' },
             ].map(item => (
               <div key={item.label}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:5 }}>
@@ -380,15 +380,15 @@ export default function AnalyticsPage() {
           </div>
           <div style={{ marginTop:18, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, textAlign:'center' }}>
             <div>
-              <div style={{ fontSize:20, fontWeight:700, color:'#3a9e6e' }}>{macroTotal?.carbs||0}g</div>
+              <div style={{ fontSize:20, fontWeight:700, color:'var(--ring-carb)' }}>{macroTotal?.carbs||0}g</div>
               <div style={{ fontSize:11, color:'var(--text2)', marginTop:2 }}>碳水</div>
             </div>
             <div>
-              <div style={{ fontSize:20, fontWeight:700, color:'var(--accent)' }}>{macroTotal?.protein||0}g</div>
+              <div style={{ fontSize:20, fontWeight:700, color:'var(--ring-protein)' }}>{macroTotal?.protein||0}g</div>
               <div style={{ fontSize:11, color:'var(--text2)', marginTop:2 }}>蛋白</div>
             </div>
             <div>
-              <div style={{ fontSize:20, fontWeight:700, color:'#d4880a' }}>{macroTotal?.fat||0}g</div>
+              <div style={{ fontSize:20, fontWeight:700, color:'var(--ring-fat)' }}>{macroTotal?.fat||0}g</div>
               <div style={{ fontSize:11, color:'var(--text2)', marginTop:2 }}>脂肪</div>
             </div>
           </div>
@@ -413,13 +413,13 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Bottom Nav */}
-      <div className="nav-bar">
-        <a href="/app"      className="nav-item">
-          <span className="nav-icon"><ChartBar size={16} /></span>追踪
+      {/* Bottom Nav — mobile only */}
+      <div className="bottom-nav">
+        <a href="/app"      className="bottom-nav-item">
+          <ChartBar size={18} />追踪
         </a>
-        <a href="/analytics" className="nav-item active">
-          <span className="nav-icon"><ChartLineDown size={16} /></span>分析
+        <a href="/analytics" className="bottom-nav-item active">
+          <ChartLineDown size={18} />分析
         </a>
       </div>
 

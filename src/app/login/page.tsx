@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Scales } from '@phosphor-icons/react';
+import { Scales, User, Lock, ArrowRight } from '@phosphor-icons/react';
 
 const API = '/api/auth';
 
@@ -38,7 +38,6 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // /app is no longer protected by middleware — hard nav works
       window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
@@ -62,7 +61,6 @@ export default function LoginPage() {
       localStorage.setItem('fl_token', data.token);
       localStorage.setItem('fl_userId', data.userId);
       localStorage.setItem('fl_username', username);
-      // /app is no longer protected by middleware — hard nav works
       window.location.href = '/app';
     } catch (e: any) {
       setError(e.message);
@@ -77,19 +75,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: 420, margin: '0 auto', paddingTop: 60 }}>
-      {/* Hero */}
-      <div className="onboarding-hero">
-        <div className="icon"><Scales size={52} /></div>
-        <h1 style={{ fontSize: 26 }}>动态减脂拉锯战</h1>
-        <p>登录你的账户<br />开始科学减脂之旅</p>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--bg)',
+      padding: '24px 16px',
+    }}>
+      {/* Brand Hero */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{
+          width: 72, height: 72,
+          background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+          borderRadius: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 16px',
+          boxShadow: '0 8px 32px rgba(16,185,129,0.3)',
+        }}>
+          <Scales size={36} color="#fff" weight="duotone" />
+        </div>
+        <h1 style={{
+          fontSize: 28,
+          fontWeight: 700,
+          color: 'var(--text)',
+          letterSpacing: '-0.3px',
+          marginBottom: 6,
+        }}>
+          动态减脂拉锯战
+        </h1>
+        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6 }}>
+          告别固定热量，10 天智能调整<br />
+          科学减脂，不再焦虑
+        </p>
       </div>
 
+      {/* Error */}
       {error && <div className="error-box">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <div className="card login-card">
-          {/* Tab Switcher — embedded in card, no floating gap */}
+      {/* Card */}
+      <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 420 }}>
+        <div className="card login-card" style={{ marginBottom: 16 }}>
+          {/* Tabs */}
           <div className="login-tabs">
             {(['login', 'register'] as const).map(t => (
               <button
@@ -103,48 +131,78 @@ export default function LoginPage() {
             ))}
           </div>
 
+          {/* Fields */}
           <div className="login-fields">
-            <div className="form-group" style={{ marginBottom: 14 }}>
+            <div className="form-group">
               <label>用户名</label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="输入用户名"
-                autoComplete={tab === 'register' ? 'username' : 'username'}
-              />
+              <div style={{ position: 'relative' }}>
+                <User size={16} color="var(--text3)" style={{ position: 'absolute', left: 14, top: 14 }} />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="输入用户名"
+                  autoComplete="username"
+                  style={{ paddingLeft: 40 }}
+                />
+              </div>
             </div>
 
-            <div className="form-group" style={{ marginBottom: tab === 'register' ? 14 : 0 }}>
+            <div className="form-group">
               <label>密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="输入密码"
-                autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
-              />
+              <div style={{ position: 'relative' }}>
+                <Lock size={16} color="var(--text3)" style={{ position: 'absolute', left: 14, top: 14 }} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="输入密码"
+                  autoComplete={tab === 'register' ? 'new-password' : 'current-password'}
+                  style={{ paddingLeft: 40 }}
+                />
+              </div>
             </div>
 
             {tab === 'register' && (
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>确认密码</label>
-                <input
-                  type="password"
-                  value={confirmPwd}
-                  onChange={e => setConfirmPwd(e.target.value)}
-                  placeholder="再次输入密码"
-                  autoComplete="new-password"
-                />
+                <div style={{ position: 'relative' }}>
+                  <Lock size={16} color="var(--text3)" style={{ position: 'absolute', left: 14, top: 14 }} />
+                  <input
+                    type="password"
+                    value={confirmPwd}
+                    onChange={e => setConfirmPwd(e.target.value)}
+                    placeholder="再次输入密码"
+                    autoComplete="new-password"
+                    style={{ paddingLeft: 40 }}
+                  />
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? '处理中...' : tab === 'login' ? '登录' : '创建账户'}
+        {/* Submit */}
+        <button type="submit" className="btn-primary" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {loading ? '处理中...' : tab === 'login' ? (
+            <>登录 <ArrowRight size={18} /></>
+          ) : (
+            <>创建账户 <ArrowRight size={18} /></>
+          )}
         </button>
       </form>
+
+      {/* Footer */}
+      <p style={{
+        fontSize: 12,
+        color: 'var(--text3)',
+        textAlign: 'center',
+        marginTop: 32,
+        lineHeight: 1.6,
+        maxWidth: 320,
+      }}>
+        本应用之营养素推荐仅供健康管理的数据记录参考，不构成医疗建议。
+      </p>
     </div>
   );
 }

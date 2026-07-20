@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '動態減脂拉鋸戰助手',
-  description: 'Dynamic Fat Loss Companion - 10天動態營養素調整減脂計畫',
+  title: '动态减脂拉锯战助手',
+  description: 'Dynamic Fat Loss Companion - 10天动态营养素调整减脂计划',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#e8623a',
+  themeColor: '#10b981',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
