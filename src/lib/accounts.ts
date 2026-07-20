@@ -70,12 +70,22 @@ export function usernameExists(username: string): boolean {
 // ── Async versions (for routes) ─────────────────────────────────────
 
 export async function kvGetAccountByUsername(username: string): Promise<Account | null> {
+  if (!isRedisConfigured()) {
+    const accounts = readLocalAccounts();
+    return accounts[username] || null;
+  }
   const accounts = await kvGetAccounts();
   return accounts[username] || null;
 }
 
 export async function kvCreateAccount(username: string, passwordHash: string, userId: string): Promise<Account> {
   const account: Account = { passwordHash, userId, createdAt: new Date().toISOString() };
+  if (!isRedisConfigured()) {
+    const accounts = readLocalAccounts();
+    accounts[username] = account;
+    writeLocalAccounts(accounts);
+    return account;
+  }
   const accounts = await kvGetAccounts();
   accounts[username] = account;
   await kvSetAccounts(accounts);
@@ -83,6 +93,10 @@ export async function kvCreateAccount(username: string, passwordHash: string, us
 }
 
 export async function kvUsernameExists(username: string): Promise<boolean> {
+  if (!isRedisConfigured()) {
+    const accounts = readLocalAccounts();
+    return username in accounts;
+  }
   const accounts = await kvGetAccounts();
   return username in accounts;
 }
