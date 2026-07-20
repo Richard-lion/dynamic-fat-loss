@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Scales, Target, Lightbulb, Drop, Notepad, ForkKnife, Camera,
   SunHorizon, Sun, Moon, Cookie, ChartBar, ChartLineDown,
-  MagnifyingGlass, Star, Books,
+  MagnifyingGlass, Star, Books, ArrowCounterClockwise, Check,
 } from '@phosphor-icons/react';
 
 function apiFetch(path: string, opts?: RequestInit) {
@@ -27,6 +27,22 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Downscale image for AI upload — cuts BigModel latency & payload
+async function compressImage(file: File, maxDim = 1280, quality = 0.82): Promise<Blob> {
+  const img = await createImageBitmap(file);
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  if (scale === 1 && file.size < 400_000) return file;
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, w, h);
+  return await new Promise<Blob>((resolve) =>
+    canvas.toBlob(b => resolve(b!), 'image/jpeg', quality)
+  );
 }
 
 function ProgressRing({ value, max, label, unit, color, size = 80 }: any) {
@@ -110,6 +126,8 @@ export default function AppPage() {
   const [settlementFeel, setSettlementFeel] = useState('');
   const [recognizing, setRecognizing] = useState(false);
   const [recognitionResult, setRecognitionResult] = useState<any>(null);
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -215,6 +233,73 @@ export default function AppPage() {
       load();
     } catch (e: any) { showToast(e.message); }
   };
+
+  const handleImagePicked = async (file: File) => {
+    setRecognizing(true);
+    setRecognitionResult(null);
+    try {
+      const compressed = await compressImage(file);
+      const previewUrl = URL.createObjectURL(compressed);
+      setCapturedImageUrl(previewUrl);
+      const formData = new FormData();
+      formData.append('image', compressed, 'food.jpg');
+      const res = await fetch('/api/recognize-food', { method: 'POST', body: formData });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || '识别失败');
+      setRecognitionResult(json);
+    } catch (err: any) {
+      showToast(err.message || '识别失败，请重试');
+      setCapturedImageUrl(null);
+    } finally {
+      setRecognizing(false);
+    }
+  };
+
+  const saveRecognitionToFavorites = async () => {
+    if (!recognitionResult) return;
+    try {
+      await apiFetch('/api/favorites', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: recognitionResult.name,
+          weight: recognitionResult.weight,
+          carbs: recognitionResult.carbs,
+          protein: recognitionResult.protein,
+          fat: recognitionResult.fat,
+          sodium: recognitionResult.sodium,
+          calories: recognitionResult.calories,
+          unit: 'g',
+          per: recognitionResult.weight,
+        }),
+      });
+      showToast('已保存到收藏 ✓');
+    } catch (e: any) { showToast(e.message); }
+  };
+
+  const filteredFoods = useMemo(() => {
+    if (!data?.foodDatabase) return [];
+    let list = data.foodDatabase;
+    if (activeCategory) list = list.filter((f: any) => f.category === activeCategory);
+    if (foodSearch) {
+      const q = foodSearch.toLowerCase();
+      list = list.filter((f: any) =>
+        f.name.includes(foodSearch) ||
+        (f.keywords && f.keywords.toLowerCase().includes(q))
+      );
+    }
+    return list.slice(0, 30);
+  }, [data, foodSearch, activeCategory]);
+
+  const foodCategories: Array<[string, string]> = useMemo(() => {
+    if (!data?.foodDatabase) return [];
+    const cats = new Set<string>();
+    data.foodDatabase.forEach((f: any) => f.category && cats.add(f.category));
+    const labels: Record<string, string> = {
+      staple: '主食', protein: '蛋白', veg: '蔬菜', fruit: '水果',
+      dairy: '乳制品', fat: '坚果油脂', snack: '零食', drink: '饮品', grain: '杂粮',
+    };
+    return Array.from(cats).map(c => [c, labels[c] || c]);
+  }, [data]);
 
   const meals = ['breakfast','lunch','dinner','snack'] as const;
   const mealLabels: Record<string,string> = { breakfast:'早餐', lunch:'午餐', dinner:'晚餐', snack:'点心' };
@@ -424,35 +509,35 @@ export default function AppPage() {
                   type="file"
                   accept="image/*"
                   ref={cameraInputRef}
-                  onChange={async (e) => {
+                  onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    setRecognizing(true);
-                    try {
-                      const formData = new FormData();
-                      formData.append('image', file);
-                      const res = await fetch('/api/recognize-food', {
-                        method: 'POST',
-                        body: formData,
-                      });
-                      const json = await res.json();
-                      if (!res.ok) throw new Error(json.error || '识别失败');
-                      setRecognitionResult(json);
-                      setRecognizing(false);
-                    } catch (err: any) {
-                      setRecognizing(false);
-                      showToast(err.message || '识别失败，请重试');
-                    }
+                    handleImagePicked(file);
+                    // Reset so picking the same file again still fires onChange
+                    e.target.value = '';
                   }}
                   style={{ display:'none' }}
                 />
-                <div
-                  onClick={() => cameraInputRef.current?.click()}
-                  style={{ background:'var(--bg3)', border:'2px dashed var(--border)', borderRadius:12, padding:'28px', textAlign:'center', cursor:'pointer', color:'var(--text2)', fontSize:13 }}
-                >
-                  <div style={{ fontSize:28, marginBottom:6 }}><Camera size={28} /></div>
-                  点击拍照或从相册选择
-                </div>
+                {capturedImageUrl ? (
+                  <div style={{ position:'relative', borderRadius:12, overflow:'hidden', marginBottom:10 }}>
+                    <img src={capturedImageUrl} alt="captured" style={{ width:'100%', display:'block', maxHeight:220, objectFit:'cover' }} />
+                    <button
+                      onClick={() => { setCapturedImageUrl(null); setRecognitionResult(null); }}
+                      style={{ position:'absolute', top:8, right:8, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none', borderRadius:8, padding:'6px 10px', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}
+                    >
+                      <ArrowCounterClockwise size={14} /> 重拍
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => cameraInputRef.current?.click()}
+                    style={{ background:'var(--bg3)', border:'2px dashed var(--border)', borderRadius:12, padding:'28px', textAlign:'center', cursor:'pointer', color:'var(--text2)', fontSize:13 }}
+                  >
+                    <div style={{ fontSize:28, marginBottom:6 }}><Camera size={28} /></div>
+                    点击拍照或从相册选择
+                    <div style={{ fontSize:11, marginTop:4, opacity:0.7 }}>识别前会自动压缩到 1280px</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -461,14 +546,25 @@ export default function AppPage() {
               <div style={{ textAlign:'center', padding:'32px 0' }}>
                 <div style={{ fontSize:32, marginBottom:12 }}><MagnifyingGlass size={32} /></div>
                 <div style={{ fontSize:15, fontWeight:600, color:'var(--text)', marginBottom:6 }}>AI 正在识别中...</div>
-                <div style={{ fontSize:12, color:'var(--text2)' }}>请稍等，结果会显示在下方</div>
+                <div style={{ fontSize:12, color:'var(--text2)' }}>已压缩图片，通常 3-8 秒</div>
               </div>
             )}
 
             {/* Recognition confirm page */}
             {!recognizing && recognitionResult && (
               <div style={{ background:'var(--bg2)', border:'1.5px solid var(--coral)', borderRadius:12, padding:'16px', marginBottom:14 }}>
-                <div style={{ fontSize:13, fontWeight:700, color:'var(--coral)', marginBottom:10 }}>✓ AI 识别结果 v2 — 请确认以下信息</div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'var(--coral)' }}>✓ AI 识别结果 — 请确认以下信息</div>
+                  {recognitionResult.confidence && (
+                    <span style={{
+                      fontSize:10, fontWeight:600, padding:'3px 8px', borderRadius:6,
+                      background: recognitionResult.confidence==='high' ? 'rgba(34,197,94,0.15)' : recognitionResult.confidence==='medium' ? 'rgba(234,179,8,0.15)' : 'rgba(239,68,68,0.15)',
+                      color: recognitionResult.confidence==='high' ? '#22c55e' : recognitionResult.confidence==='medium' ? '#eab308' : '#ef4444',
+                    }}>
+                      {recognitionResult.confidence === 'high' ? '高置信' : recognitionResult.confidence === 'medium' ? '中置信' : '低置信'}
+                    </span>
+                  )}
+                </div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                   {[
                     { key:'name',   label:'食物名称', type:'text', value: recognitionResult.name },
@@ -490,29 +586,35 @@ export default function AppPage() {
                   ))}
                 </div>
                 <div style={{ fontSize:11, color:'var(--text3)', marginTop:6, marginBottom:12 }}>
-                  热量估算：{(recognitionResult.carbs||0)*4 + (recognitionResult.protein||0)*4 + (recognitionResult.fat||0)*9} kcal
-                  {recognitionResult.confidence && <span style={{ marginLeft:8, color:recognitionResult.confidence==='high'?'var(--success)':recognitionResult.confidence==='medium'?'var(--warn)':'var(--error)' }}>· 置信度：{recognitionResult.confidence}</span>}
+                  热量估算：{Math.round((recognitionResult.carbs||0)*4 + (recognitionResult.protein||0)*4 + (recognitionResult.fat||0)*9)} kcal
                 </div>
-                <div style={{ display:'flex', gap:8 }}>
+                <div style={{ display:'flex', gap:8, marginBottom:8 }}>
                   <button
-                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:13, cursor:'pointer', color:'var(--text2)' }}
+                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:12, cursor:'pointer', color:'var(--text2)', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}
                     onClick={() => {
                       setRecognitionResult(null);
+                      setCapturedImageUrl(null);
                       setShowCameraMode(false);
                     }}
                   >
                     取消
                   </button>
                   <button
-                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:13, cursor:'pointer', color:'var(--text2)' }}
+                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:12, cursor:'pointer', color:'var(--text2)', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}
                     onClick={() => setRecognitionResult(null)}
                   >
-                    重拍
+                    <ArrowCounterClockwise size={14} /> 重拍
+                  </button>
+                  <button
+                    style={{ flex:1, background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:9, padding:'9px 12px', fontSize:12, cursor:'pointer', color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}
+                    onClick={saveRecognitionToFavorites}
+                  >
+                    <Star size={14} /> 收藏
                   </button>
                 </div>
                 <button
                   className="btn-primary"
-                  style={{ width:'100%', marginTop:8, fontSize:13 }}
+                  style={{ width:'100%', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}
                   onClick={() => {
                     setCustomFood({
                       name: String(recognitionResult.name),
@@ -523,10 +625,11 @@ export default function AppPage() {
                       sodium: String(recognitionResult.sodium),
                     });
                     setRecognitionResult(null);
+                    setCapturedImageUrl(null);
                     setShowCameraMode(false);
                   }}
                 >
-                  确认 — 填入表单
+                  <Check size={16} /> 确认 — 填入表单
                 </button>
               </div>
             )}
@@ -557,30 +660,63 @@ export default function AppPage() {
             {/* Search results */}
             {!showCameraMode && (
               <div style={{ marginBottom:14 }}>
-                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6, fontWeight:600, display:'flex', alignItems:'center', gap:4 }}>
+                <div style={{ fontSize:11, color:'var(--text2)', marginBottom:8, fontWeight:600, display:'flex', alignItems:'center', gap:4 }}>
                   <Books size={12} /> 食物库 {foodSearch && `— 搜索"${foodSearch}"`}
+                  <span style={{ marginLeft:'auto', opacity:0.7 }}>{filteredFoods.length} 项</span>
                 </div>
-                <div style={{ maxHeight:160, overflowY:'auto' }}>
-                  {data.foodDatabase
-                    .filter((f:any) => foodSearch === '' || f.name.includes(foodSearch))
-                    .slice(0,12)
-                    .map((f:any) => {
-                      const isFav = data.favorites?.some((fv: any) => fv.name === f.name);
-                      return (
-                        <div key={f.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 4px', borderBottom:'1px solid var(--border)' }}>
-                          <div style={{ flex:1, cursor:'pointer' }} onClick={() => addFood(f, f.per)}>
-                            <div style={{ fontSize:13, fontWeight:500 }}>{f.name}</div>
-                            <div style={{ fontSize:10, color:'var(--text2)' }}>碳水{f.carbs}g · 蛋白{f.protein}g · 脂肪{f.fat}g · {f.per}g/份</div>
-                          </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleFavorite(f); }}
-                            style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:'2px 6px', color: isFav ? 'var(--accent)' : 'var(--text3)' }}
-                          >
-                            {isFav ? <Star size={15} weight="fill" /> : <Star size={15} />}
-                          </button>
+                {/* Category pills */}
+                <div style={{ display:'flex', gap:6, overflowX:'auto', paddingBottom:8, marginBottom:8, scrollbarWidth:'none' }}>
+                  <button
+                    onClick={() => setActiveCategory(null)}
+                    style={{
+                      flexShrink:0, padding:'5px 12px', fontSize:11, borderRadius:99,
+                      border: activeCategory===null ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                      background: activeCategory===null ? 'rgba(232,98,58,0.12)' : 'var(--bg3)',
+                      color: activeCategory===null ? 'var(--accent)' : 'var(--text2)',
+                      cursor:'pointer', fontWeight: activeCategory===null ? 600 : 400,
+                    }}
+                  >
+                    全部
+                  </button>
+                  {foodCategories.map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveCategory(key === activeCategory ? null : key)}
+                      style={{
+                        flexShrink:0, padding:'5px 12px', fontSize:11, borderRadius:99,
+                        border: activeCategory===key ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                        background: activeCategory===key ? 'rgba(232,98,58,0.12)' : 'var(--bg3)',
+                        color: activeCategory===key ? 'var(--accent)' : 'var(--text2)',
+                        cursor:'pointer', fontWeight: activeCategory===key ? 600 : 400,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ maxHeight:200, overflowY:'auto' }}>
+                  {filteredFoods.length === 0 && (
+                    <div style={{ textAlign:'center', padding:20, color:'var(--text3)', fontSize:12 }}>
+                      没有匹配的食物 — 试试别的关键词
+                    </div>
+                  )}
+                  {filteredFoods.map((f:any) => {
+                    const isFav = data.favorites?.some((fv: any) => fv.name === f.name);
+                    return (
+                      <div key={f.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 4px', borderBottom:'1px solid var(--border)' }}>
+                        <div style={{ flex:1, cursor:'pointer' }} onClick={() => addFood(f, f.per)}>
+                          <div style={{ fontSize:13, fontWeight:500 }}>{f.name}</div>
+                          <div style={{ fontSize:10, color:'var(--text2)' }}>碳水{f.carbs}g · 蛋白{f.protein}g · 脂肪{f.fat}g · {f.per}{f.unit}/份</div>
                         </div>
-                      );
-                    })}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(f); }}
+                          style={{ background:'none', border:'none', cursor:'pointer', fontSize:15, padding:'2px 6px', color: isFav ? 'var(--accent)' : 'var(--text3)' }}
+                        >
+                          {isFav ? <Star size={15} weight="fill" /> : <Star size={15} />}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
